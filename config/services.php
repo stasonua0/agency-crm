@@ -37,8 +37,13 @@ return [
 
     'tochka' => [
         'sandbox' => env('TOCHKA_SANDBOX', true),
-        'base_url' => env('TOCHKA_BASE_URL', 'https://enter.tochka.com/sandbox'),
-        'token' => env('TOCHKA_TOKEN'),
+        'use_stub' => env('TOCHKA_USE_STUB', true),
+        'base_url' => env('TOCHKA_BASE_URL', 'https://enter.tochka.com/sandbox/v2'),
+        'token' => env('TOCHKA_TOKEN', env('TOCHKA_SANDBOX', true) ? 'sandbox.jwt.token' : null),
+        'client_id' => env('TOCHKA_CLIENT_ID'),
+        'customer_code' => env('TOCHKA_CUSTOMER_CODE'),
+        'webhook_public_url' => env('TOCHKA_WEBHOOK_PUBLIC_URL'),
+        'webhook_public_key_url' => env('TOCHKA_WEBHOOK_PUBLIC_KEY_URL', 'https://enter.tochka.com/.well-known/jwks.json'),
         'timeout' => env('TOCHKA_TIMEOUT', 15),
     ],
 

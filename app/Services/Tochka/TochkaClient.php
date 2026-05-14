@@ -113,16 +113,22 @@ class TochkaClient
 
     private function request(): PendingRequest
     {
-        return Http::baseUrl((string) $this->config('base_url'))
+        $request = Http::baseUrl((string) $this->config('base_url'))
             ->withToken((string) $this->config('token'))
             ->acceptJson()
             ->asJson()
             ->timeout((int) $this->config('timeout', 15));
+
+        if (filled($this->config('customer_code'))) {
+            $request = $request->withHeader('CustomerCode', (string) $this->config('customer_code'));
+        }
+
+        return $request;
     }
 
     private function usesSandboxStub(): bool
     {
-        return (bool) $this->config('sandbox', true) || blank($this->config('token'));
+        return (bool) $this->config('use_stub', true) || blank($this->config('token'));
     }
 
     private function config(string $key, mixed $default = null): mixed

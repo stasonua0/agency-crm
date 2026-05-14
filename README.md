@@ -72,6 +72,37 @@ finance@example.com
 viewer@example.com
 ```
 
+## Точка Банк
+
+Локально интеграция работает в безопасном sandbox-stub режиме: CRM создаёт тестовые внешние ID и сохраняет ответы без обращения к реальному API и без реальных ключей.
+
+Текущие переменные:
+
+```env
+TOCHKA_SANDBOX=true
+TOCHKA_USE_STUB=true
+TOCHKA_BASE_URL=https://enter.tochka.com/sandbox/v2
+TOCHKA_TOKEN=sandbox.jwt.token
+TOCHKA_CLIENT_ID=
+TOCHKA_CUSTOMER_CODE=
+TOCHKA_WEBHOOK_PUBLIC_URL=
+TOCHKA_WEBHOOK_PUBLIC_KEY_URL=https://enter.tochka.com/.well-known/jwks.json
+TOCHKA_TIMEOUT=15
+```
+
+Когда появится публичный HTTPS-домен, нужно будет:
+
+- указать `TOCHKA_WEBHOOK_PUBLIC_URL`, например `https://crm.example.ru/webhooks/tochka`;
+- получить в интернет-банке JWT-токен, `client_id` и `customerCode`;
+- заменить `TOCHKA_TOKEN`, `TOCHKA_CLIENT_ID`, `TOCHKA_CUSTOMER_CODE`;
+- переключить `TOCHKA_USE_STUB=false` после проверки payload по актуальной документации Точки.
+
+Локальный webhook endpoint уже есть:
+
+```text
+POST /webhooks/tochka
+```
+
 ## Проверка
 
 Backend-тесты:
@@ -86,36 +117,24 @@ php artisan test
 npm run build
 ```
 
-## Объём этапов
-
-Реализовано:
+## Реализовано
 
 - каркас Laravel 12;
-- локальные сервисы PostgreSQL и Redis;
+- PostgreSQL и Redis;
 - Inertia.js + Vue 3;
 - авторизация;
 - роли `owner`, `finance_manager`, `viewer`;
-- CRM-навигация;
-- дашборд-заглушка;
-- CRUD клиентов;
-- CRUD услуг;
-- CRUD проектов;
-- поиск, фильтры и пагинация в справочниках;
-- архивирование вместо удаления;
-- авторасчёт остатка по проекту;
+- русскоязычная CRM-навигация;
+- дашборд;
+- справочники клиентов, услуг, проектов и получателей выплат;
 - регулярные операции;
-- начисления со snapshot-полями;
-- единый реестр финансовых операций;
-- защита от дублей финансовых операций по источнику.
-
-Пока не реализовано:
-
-- финансовое ядро;
-- cron-генерация начислений;
-- ручная оплата начислений;
+- начисления;
+- финансовые операции;
 - счета и акты;
-- интеграция с Точка Банком;
-- интеграция с DaData;
-- отправка email;
+- выплаты, зарплаты и ПФ;
 - отчёты;
-- постоянный журнал аудита.
+- настройки;
+- журнал аудита;
+- sandbox-заготовка интеграции с Точка Банком;
+- DaData-заготовка;
+- email-отправка через локальный mailer/log.
