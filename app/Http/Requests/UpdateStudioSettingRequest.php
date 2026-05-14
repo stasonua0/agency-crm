@@ -23,6 +23,9 @@ class UpdateStudioSettingRequest extends FormRequest
             'vat_enabled' => ['boolean'],
             'invoice_email_subject' => ['nullable', 'string', 'max:255'],
             'invoice_email_body' => ['nullable', 'string', 'max:5000'],
+            'ai_provider' => ['nullable', 'string', 'in:stub,openai'],
+            'ai_api_key' => ['nullable', 'string', 'max:5000'],
+            'ai_model' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -2,17 +2,37 @@
 
 namespace App\Services\Ai;
 
+use App\Models\StudioSetting;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class AiAutofillService
 {
+    public function __construct(
+        private readonly OpenAiClient $openAi,
+    ) {
+    }
+
     public function parseClientText(string $text): array
     {
         $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+        $settings = StudioSetting::singleton();
 
+        if ($settings->ai_provider === 'openai' && filled($settings->ai_api_key) && filled($settings->ai_model)) {
+            try {
+                return $this->openAi->parseClientText($text, $settings);
+            } catch (\Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $this->stubParseClientText($text);
+    }
+
+    public function stubParseClientText(string $text): array
+    {
         return [
-            'source' => $this->provider(),
+            'source' => 'stub',
             'mode' => 'preview',
             'confidence' => $this->confidence($text),
             'fields' => array_filter([
@@ -34,11 +54,6 @@ class AiAutofillService
                 'Реквизиты по ИНН лучше дополнительно проверить через DaData.',
             ],
         ];
-    }
-
-    private function provider(): string
-    {
-        return (string) config('services.ai_autofill.provider', 'stub');
     }
 
     private function confidence(string $text): float

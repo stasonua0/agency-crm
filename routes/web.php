@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:'.User::ROLE_OWNER)->group(function () {
         Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/ai-models', [SettingsController::class, 'refreshAiModels'])->name('settings.ai-models.refresh');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

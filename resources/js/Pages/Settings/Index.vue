@@ -2,13 +2,17 @@
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 const props = defineProps({
     settings: { type: Object, required: true },
 });
+
+const modelOptions = computed(() => props.settings.ai_models_cache ?? []);
 
 const form = useForm({
     name: props.settings.name ?? '',
@@ -25,9 +29,26 @@ const form = useForm({
     vat_enabled: Boolean(props.settings.vat_enabled),
     invoice_email_subject: props.settings.invoice_email_subject ?? 'Счёт {номер_счёта} на сумму {сумма}',
     invoice_email_body: props.settings.invoice_email_body ?? 'Здравствуйте.\n\nНаправляем счёт {номер_счёта} на сумму {сумма} по услуге {услуга}.\n\nКлиент: {клиент}',
+    ai_provider: props.settings.ai_provider ?? 'stub',
+    ai_api_key: '',
+    ai_model: props.settings.ai_model ?? '',
+});
+
+const refreshForm = useForm({
+    ai_api_key: '',
 });
 
 const submit = () => form.put(route('settings.update'), { preserveScroll: true });
+
+const refreshModels = () => {
+    refreshForm.ai_api_key = form.ai_api_key;
+    refreshForm.post(route('settings.ai-models.refresh'), {
+        preserveScroll: true,
+        onSuccess: () => {
+            form.ai_api_key = '';
+        },
+    });
+};
 </script>
 
 <template>
@@ -36,7 +57,7 @@ const submit = () => form.put(route('settings.update'), { preserveScroll: true }
         <template #header>
             <div>
                 <h1 class="text-lg font-semibold text-slate-950">Настройки</h1>
-                <p class="text-sm text-slate-500">Реквизиты студии и шаблоны писем</p>
+                <p class="text-sm text-slate-500">Реквизиты студии, шаблоны писем и ИИ-заполнение</p>
             </div>
         </template>
 
@@ -119,8 +140,60 @@ const submit = () => form.put(route('settings.update'), { preserveScroll: true }
 
                 <div class="space-y-5 border-t border-slate-200 pt-6">
                     <div>
+                        <h2 class="text-base font-semibold text-slate-950">ИИ-заполнение</h2>
+                        <p class="mt-1 text-sm text-slate-500">OpenAI-ключ хранится в базе зашифрованно. В GitHub и на экран ключ не выводится.</p>
+                    </div>
+
+                    <div class="grid gap-5 lg:grid-cols-3">
+                        <div>
+                            <InputLabel for="ai_provider" value="Провайдер" />
+                            <select id="ai_provider" v-model="form.ai_provider" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="stub">Локальный stub</option>
+                                <option value="openai">OpenAI</option>
+                            </select>
+                            <InputError class="mt-2" :message="form.errors.ai_provider" />
+                        </div>
+
+                        <div>
+                            <InputLabel for="ai_api_key" value="OpenAI API-ключ" />
+                            <TextInput
+                                id="ai_api_key"
+                                v-model="form.ai_api_key"
+                                type="password"
+                                class="mt-1 block w-full"
+                                :placeholder="settings.has_ai_api_key ? 'Ключ сохранён. Введите новый для замены' : 'sk-...'"
+                            />
+                            <InputError class="mt-2" :message="form.errors.ai_api_key || refreshForm.errors.ai_api_key" />
+                        </div>
+
+                        <div class="flex items-end">
+                            <SecondaryButton type="button" :disabled="refreshForm.processing" @click="refreshModels">
+                                {{ refreshForm.processing ? 'Обновляем...' : 'Обновить модели' }}
+                            </SecondaryButton>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-5 lg:grid-cols-2">
+                        <div>
+                            <InputLabel for="ai_model" value="Модель" />
+                            <select id="ai_model" v-model="form.ai_model" :disabled="form.ai_provider !== 'openai'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:bg-slate-100">
+                                <option value="">Не выбрана</option>
+                                <option v-for="model in modelOptions" :key="model" :value="model">{{ model }}</option>
+                            </select>
+                            <InputError class="mt-2" :message="form.errors.ai_model" />
+                        </div>
+                        <div class="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                            <div>Ключ: {{ settings.has_ai_api_key ? 'сохранён' : 'не задан' }}</div>
+                            <div>Моделей в списке: {{ modelOptions.length }}</div>
+                            <div>Последнее обновление: {{ settings.ai_models_synced_at || 'ещё не выполнялось' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-5 border-t border-slate-200 pt-6">
+                    <div>
                         <h2 class="text-base font-semibold text-slate-950">Шаблон письма со счётом</h2>
-                        <p class="mt-1 text-sm text-slate-500">Доступны переменные: {номер_счёта}, {сумма}, {клиент}, {услуга}</p>
+                        <p class="mt-1 text-sm text-slate-500">Доступные переменные: {номер_счёта}, {сумма}, {клиент}, {услуга}</p>
                     </div>
                     <div>
                         <InputLabel for="invoice_email_subject" value="Тема письма" />
