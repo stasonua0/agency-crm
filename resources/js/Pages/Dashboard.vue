@@ -3,28 +3,28 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 
 const summary = [
-    { label: 'Month income', value: '0 RUB', detail: 'No operations yet' },
-    { label: 'Month expense', value: '0 RUB', detail: 'No operations yet' },
-    { label: 'Profit', value: '0 RUB', detail: 'Cash basis' },
-    { label: 'Expected payments', value: '0', detail: 'Stage 4 will fill this' },
+    { label: 'Доход за месяц', value: '0 ₽', detail: 'Операций пока нет' },
+    { label: 'Расход за месяц', value: '0 ₽', detail: 'Операций пока нет' },
+    { label: 'Прибыль', value: '0 ₽', detail: 'Кассовый метод' },
+    { label: 'Ожидаемые оплаты', value: '0', detail: 'Появятся на этапе 4' },
 ];
 
 const nextModules = [
-    'Clients, services, and projects',
-    'Recurring operations',
-    'Payment accruals and invoices',
-    'Reports and audit log',
+    'Клиенты, услуги и проекты',
+    'Регулярные операции',
+    'Начисления и счета',
+    'Отчёты и журнал аудита',
 ];
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Дашборд" />
 
     <AuthenticatedLayout>
         <template #header>
             <div>
-                <h1 class="text-lg font-semibold text-slate-950">Dashboard</h1>
-                <p class="text-sm text-slate-500">CRM MVP workspace</p>
+                <h1 class="text-lg font-semibold text-slate-950">Дашборд</h1>
+                <p class="text-sm text-slate-500">Рабочее место CRM MVP</p>
             </div>
         </template>
 
@@ -44,44 +44,44 @@ const nextModules = [
             <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex items-start justify-between gap-4">
                     <div>
-                        <h2 class="text-base font-semibold text-slate-950">Stage 1 status</h2>
+                        <h2 class="text-base font-semibold text-slate-950">Статус этапа 1</h2>
                         <p class="mt-1 text-sm text-slate-500">
-                            The application shell, authentication, roles, navigation, PostgreSQL, and Redis are being prepared here.
+                            Здесь подготовлены каркас приложения, авторизация, роли, навигация, PostgreSQL и Redis.
                         </p>
                     </div>
                     <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                        In progress
+                        Готово
                     </span>
                 </div>
 
                 <div class="mt-6 overflow-hidden rounded-lg border border-slate-200">
                     <div class="grid grid-cols-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <span>Area</span>
-                        <span>Status</span>
-                        <span>Notes</span>
+                        <span>Раздел</span>
+                        <span>Статус</span>
+                        <span>Примечание</span>
                     </div>
                     <div class="divide-y divide-slate-200 text-sm">
                         <div class="grid grid-cols-3 px-4 py-3">
-                            <span class="font-medium text-slate-900">Auth</span>
-                            <span class="text-emerald-700">Ready</span>
+                            <span class="font-medium text-slate-900">Авторизация</span>
+                            <span class="text-emerald-700">Готово</span>
                             <span class="text-slate-500">Breeze + Inertia</span>
                         </div>
                         <div class="grid grid-cols-3 px-4 py-3">
-                            <span class="font-medium text-slate-900">Roles</span>
-                            <span class="text-emerald-700">Ready</span>
-                            <span class="text-slate-500">owner, finance_manager, viewer</span>
+                            <span class="font-medium text-slate-900">Роли</span>
+                            <span class="text-emerald-700">Готово</span>
+                            <span class="text-slate-500">Владелец, финансовый менеджер, наблюдатель</span>
                         </div>
                         <div class="grid grid-cols-3 px-4 py-3">
-                            <span class="font-medium text-slate-900">Business modules</span>
-                            <span class="text-amber-700">Planned</span>
-                            <span class="text-slate-500">Start in Stage 2</span>
+                            <span class="font-medium text-slate-900">Бизнес-модули</span>
+                            <span class="text-amber-700">Запланировано</span>
+                            <span class="text-slate-500">Начинаются на этапе 2</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <aside class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 class="text-base font-semibold text-slate-950">Next modules</h2>
+                <h2 class="text-base font-semibold text-slate-950">Следующие модули</h2>
                 <div class="mt-5 space-y-4">
                     <div
                         v-for="(module, index) in nextModules"

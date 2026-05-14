@@ -14,21 +14,21 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     $sections = [
-        'clients' => 'Clients',
-        'projects' => 'Projects',
-        'services' => 'Services',
-        'recurring-items' => 'Recurring operations',
-        'payment-occurrences' => 'Payment accruals',
-        'financial-operations' => 'Financial operations',
-        'invoices' => 'Invoices',
-        'acts' => 'Acts',
-        'payees' => 'Payees',
-        'payouts' => 'Payouts',
-        'payroll' => 'Payroll',
-        'pf' => 'PF',
-        'reports' => 'Reports',
-        'settings' => 'Settings',
-        'audit-log' => 'Audit Log',
+        'clients' => 'Клиенты',
+        'projects' => 'Проекты',
+        'services' => 'Услуги',
+        'recurring-items' => 'Регулярные операции',
+        'payment-occurrences' => 'Начисления',
+        'financial-operations' => 'Финансовые операции',
+        'invoices' => 'Счета',
+        'acts' => 'Акты',
+        'payees' => 'Получатели выплат',
+        'payouts' => 'Выплаты',
+        'payroll' => 'Зарплаты',
+        'pf' => 'ПФ',
+        'reports' => 'Отчёты',
+        'settings' => 'Настройки',
+        'audit-log' => 'Журнал аудита',
     ];
 
     foreach ($sections as $slug => $title) {

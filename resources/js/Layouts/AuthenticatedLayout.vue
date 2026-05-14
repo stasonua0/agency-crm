@@ -6,23 +6,29 @@ import { ref } from 'vue';
 
 const showingSidebar = ref(false);
 
+const roleLabels = {
+    owner: 'Владелец',
+    finance_manager: 'Финансовый менеджер',
+    viewer: 'Наблюдатель',
+};
+
 const navigation = [
-    { label: 'Dashboard', routeName: 'dashboard', href: route('dashboard'), mark: 'DB' },
-    { label: 'Clients', routeName: 'clients.index', href: route('clients.index'), mark: 'CL' },
-    { label: 'Projects', routeName: 'projects.index', href: route('projects.index'), mark: 'PR' },
-    { label: 'Services', routeName: 'services.index', href: route('services.index'), mark: 'SV' },
-    { label: 'Recurring operations', routeName: 'recurring.items.index', href: route('recurring.items.index'), mark: 'RO' },
-    { label: 'Payment accruals', routeName: 'payment.occurrences.index', href: route('payment.occurrences.index'), mark: 'AC' },
-    { label: 'Financial operations', routeName: 'financial.operations.index', href: route('financial.operations.index'), mark: 'FO' },
-    { label: 'Invoices', routeName: 'invoices.index', href: route('invoices.index'), mark: 'IN' },
-    { label: 'Acts', routeName: 'acts.index', href: route('acts.index'), mark: 'AT' },
-    { label: 'Payees', routeName: 'payees.index', href: route('payees.index'), mark: 'PY' },
-    { label: 'Payouts', routeName: 'payouts.index', href: route('payouts.index'), mark: 'PO' },
-    { label: 'Payroll', routeName: 'payroll.index', href: route('payroll.index'), mark: 'SA' },
-    { label: 'PF', routeName: 'pf.index', href: route('pf.index'), mark: 'PF' },
-    { label: 'Reports', routeName: 'reports.index', href: route('reports.index'), mark: 'RP' },
-    { label: 'Settings', routeName: 'settings.index', href: route('settings.index'), mark: 'ST' },
-    { label: 'Audit Log', routeName: 'audit.log.index', href: route('audit.log.index'), mark: 'AL' },
+    { label: 'Дашборд', routeName: 'dashboard', href: route('dashboard'), mark: 'ДБ' },
+    { label: 'Клиенты', routeName: 'clients.index', href: route('clients.index'), mark: 'КЛ' },
+    { label: 'Проекты', routeName: 'projects.index', href: route('projects.index'), mark: 'ПР' },
+    { label: 'Услуги', routeName: 'services.index', href: route('services.index'), mark: 'УС' },
+    { label: 'Регулярные операции', routeName: 'recurring.items.index', href: route('recurring.items.index'), mark: 'РО' },
+    { label: 'Начисления', routeName: 'payment.occurrences.index', href: route('payment.occurrences.index'), mark: 'НЧ' },
+    { label: 'Финансовые операции', routeName: 'financial.operations.index', href: route('financial.operations.index'), mark: 'ФО' },
+    { label: 'Счета', routeName: 'invoices.index', href: route('invoices.index'), mark: 'СЧ' },
+    { label: 'Акты', routeName: 'acts.index', href: route('acts.index'), mark: 'АК' },
+    { label: 'Получатели выплат', routeName: 'payees.index', href: route('payees.index'), mark: 'ПВ' },
+    { label: 'Выплаты', routeName: 'payouts.index', href: route('payouts.index'), mark: 'ВП' },
+    { label: 'Зарплаты', routeName: 'payroll.index', href: route('payroll.index'), mark: 'ЗП' },
+    { label: 'ПФ', routeName: 'pf.index', href: route('pf.index'), mark: 'ПФ' },
+    { label: 'Отчёты', routeName: 'reports.index', href: route('reports.index'), mark: 'ОТ' },
+    { label: 'Настройки', routeName: 'settings.index', href: route('settings.index'), mark: 'НС' },
+    { label: 'Журнал аудита', routeName: 'audit.log.index', href: route('audit.log.index'), mark: 'ЖА' },
 ];
 
 const isActive = (routeName) => route().current(routeName);
@@ -40,7 +46,7 @@ const isActive = (routeName) => route().current(routeName);
                 </div>
                 <div>
                     <div class="text-sm font-semibold tracking-wide text-slate-950">Agency CRM</div>
-                    <div class="text-xs text-slate-500">Finance workspace</div>
+                    <div class="text-xs text-slate-500">Финансовое рабочее место</div>
                 </div>
             </div>
 
@@ -93,7 +99,7 @@ const isActive = (routeName) => route().current(routeName);
                                 {{ $page.props.auth.user.name }}
                             </div>
                             <div class="text-xs uppercase tracking-wide text-slate-500">
-                                {{ $page.props.auth.user.role }}
+                                {{ roleLabels[$page.props.auth.user.role] ?? $page.props.auth.user.role }}
                             </div>
                         </div>
 
@@ -109,10 +115,10 @@ const isActive = (routeName) => route().current(routeName);
 
                             <template #content>
                                 <DropdownLink :href="route('profile.edit')">
-                                    Profile
+                                    Профиль
                                 </DropdownLink>
                                 <DropdownLink :href="route('logout')" method="post" as="button">
-                                    Log Out
+                                    Выйти
                                 </DropdownLink>
                             </template>
                         </Dropdown>

@@ -1,8 +1,8 @@
 # Agency CRM MVP
 
-Laravel 12 CRM MVP for a digital agency.
+CRM MVP для digital-агентства на Laravel 12.
 
-## Stack
+## Стек
 
 - PHP 8.4
 - Laravel 12
@@ -11,60 +11,60 @@ Laravel 12 CRM MVP for a digital agency.
 - Inertia.js
 - Vue 3
 - Tailwind CSS
-- Vuexy-inspired application shell
+- интерфейс в стиле Vuexy
 
-The licensed Vuexy source package is kept outside this repository. Do not commit the purchased template archive, license files, `.env`, database dumps, API keys, or production credentials.
+Купленный исходный пакет Vuexy хранится вне этого репозитория. Не коммитить архив шаблона, файлы лицензии, `.env`, дампы базы, API-ключи и production-доступы.
 
-## Local Setup
+## Локальный запуск
 
-Install dependencies:
+Установить зависимости:
 
 ```bash
 composer install
 npm install
 ```
 
-Copy environment file:
+Подготовить окружение:
 
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
 
-Start PostgreSQL and Redis:
+Запустить PostgreSQL и Redis:
 
 ```bash
 docker compose up -d pgsql redis
 ```
 
-Run migrations and seed local users:
+Применить миграции и создать тестовых пользователей:
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-Start the app:
+Запустить приложение:
 
 ```bash
 php artisan serve
 npm run dev
 ```
 
-Open:
+Открыть:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-## Local Users
+## Локальные пользователи
 
-All seeded users use the password:
+Пароль у всех тестовых пользователей:
 
 ```text
 password
 ```
 
-Accounts:
+Аккаунты:
 
 ```text
 owner@example.com
@@ -72,40 +72,40 @@ finance@example.com
 viewer@example.com
 ```
 
-## Verification
+## Проверка
 
-Run backend tests:
+Backend-тесты:
 
 ```bash
 php artisan test
 ```
 
-Build frontend assets:
+Сборка frontend:
 
 ```bash
 npm run build
 ```
 
-## Stage 1 Scope
+## Объём этапа 1
 
-Implemented:
+Реализовано:
 
-- Laravel 12 project shell
-- PostgreSQL and Redis local services
-- Inertia.js + Vue 3
-- Authentication
-- Roles: `owner`, `finance_manager`, `viewer`
-- CRM navigation
-- Dashboard placeholder
-- Module placeholders
+- каркас Laravel 12;
+- локальные сервисы PostgreSQL и Redis;
+- Inertia.js + Vue 3;
+- авторизация;
+- роли `owner`, `finance_manager`, `viewer`;
+- CRM-навигация;
+- дашборд-заглушка;
+- заглушки модулей.
 
-Not implemented yet:
+Пока не реализовано:
 
-- Clients, projects, and services CRUD
-- Financial core
-- Invoices and acts
-- Tochka Bank integration
-- DaData integration
-- Email delivery
-- Reports
-- Audit log persistence
+- CRUD клиентов, проектов и услуг;
+- финансовое ядро;
+- счета и акты;
+- интеграция с Точка Банком;
+- интеграция с DaData;
+- отправка email;
+- отчёты;
+- постоянный журнал аудита.
