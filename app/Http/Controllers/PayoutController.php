@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ContractorSettlement;
+use App\Models\AuditLog;
 use App\Models\PayoutBatch;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,7 +37,7 @@ class PayoutController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, AuditLogger $audit): RedirectResponse
     {
         $validated = $request->validate([
             'settlement_ids' => ['required', 'array', 'min:1'],
@@ -43,7 +45,7 @@ class PayoutController extends Controller
             'comment' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $batch = DB::transaction(function () use ($validated) {
             $settlements = ContractorSettlement::query()
                 ->whereIn('id', $validated['settlement_ids'])
                 ->lockForUpdate()
@@ -91,18 +93,22 @@ class PayoutController extends Controller
                     'amount_snapshot' => $settlement->amount,
                 ]);
             }
+
+            return $batch;
         });
+        $audit->log(AuditLog::ACTION_BATCH_PAYOUT, $batch, ['status' => 'created', 'total_amount' => $batch->total_amount]);
 
         return redirect()->route('payouts.index')->with('success', 'Пакет выплат создан.');
     }
 
-    public function markPaid(Request $request, PayoutBatch $payoutBatch): RedirectResponse
+    public function markPaid(Request $request, PayoutBatch $payoutBatch, AuditLogger $audit): RedirectResponse
     {
         $validated = $request->validate([
             'paid_at' => ['required', 'date'],
         ]);
 
         $payoutBatch->markPaid($validated['paid_at']);
+        $audit->log(AuditLog::ACTION_BATCH_PAYOUT, $payoutBatch, ['status' => 'paid', 'paid_at' => $validated['paid_at']]);
 
         return redirect()->route('payouts.index')->with('success', 'Пакет выплат подтверждён.');
     }

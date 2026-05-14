@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreClientRequest;
 use App\Http\Requests\UpdateClientRequest;
+use App\Models\AuditLog;
 use App\Models\Client;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,9 +37,10 @@ class ClientController extends Controller
         return Inertia::render('Clients/Create');
     }
 
-    public function store(StoreClientRequest $request): RedirectResponse
+    public function store(StoreClientRequest $request, AuditLogger $audit): RedirectResponse
     {
-        Client::create($request->validated());
+        $client = Client::create($request->validated());
+        $audit->log(AuditLog::ACTION_CREATED, $client, ['name' => $client->short_name]);
 
         return redirect()->route('clients.index')->with('success', 'Клиент создан.');
     }
@@ -49,16 +52,20 @@ class ClientController extends Controller
         ]);
     }
 
-    public function update(UpdateClientRequest $request, Client $client): RedirectResponse
+    public function update(UpdateClientRequest $request, Client $client, AuditLogger $audit): RedirectResponse
     {
-        $client->update($request->validated());
+        $validated = $request->validated();
+        $before = $client->only(array_keys($validated));
+        $client->update($validated);
+        $audit->log(AuditLog::ACTION_UPDATED, $client, ['before' => $before, 'after' => $client->only(array_keys($validated))]);
 
         return redirect()->route('clients.index')->with('success', 'Клиент обновлён.');
     }
 
-    public function destroy(Client $client): RedirectResponse
+    public function destroy(Client $client, AuditLogger $audit): RedirectResponse
     {
         $client->archive();
+        $audit->log(AuditLog::ACTION_ARCHIVED, $client, ['name' => $client->short_name]);
 
         return redirect()->route('clients.index')->with('success', 'Клиент архивирован.');
     }

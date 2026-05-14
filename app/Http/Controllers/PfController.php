@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\PaymentOccurrence;
+use App\Models\AuditLog;
 use App\Models\PfPayoutBatch;
 use App\Models\RecurringItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use App\Services\Audit\AuditLogger;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,7 +36,7 @@ class PfController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, AuditLogger $audit): RedirectResponse
     {
         $validated = $request->validate([
             'occurrence_ids' => ['required', 'array', 'min:1'],
@@ -42,7 +44,7 @@ class PfController extends Controller
             'comment' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        DB::transaction(function () use ($validated) {
+        $batch = DB::transaction(function () use ($validated) {
             $occurrences = $this->pfOccurrenceQuery()
                 ->whereIn('payment_occurrences.id', $validated['occurrence_ids'])
                 ->where('payment_occurrences.status', PaymentOccurrence::STATUS_PLANNED)
@@ -73,18 +75,22 @@ class PfController extends Controller
                     'amount_snapshot' => $occurrence->amount_snapshot,
                 ]);
             }
+
+            return $batch;
         });
+        $audit->log(AuditLog::ACTION_BATCH_PAYOUT, $batch, ['type' => 'pf', 'status' => 'created', 'total_amount' => $batch->total_amount]);
 
         return redirect()->route('pf.index')->with('success', 'Пакет ПФ создан.');
     }
 
-    public function markPaid(Request $request, PfPayoutBatch $pfPayoutBatch): RedirectResponse
+    public function markPaid(Request $request, PfPayoutBatch $pfPayoutBatch, AuditLogger $audit): RedirectResponse
     {
         $validated = $request->validate([
             'paid_at' => ['required', 'date'],
         ]);
 
         $pfPayoutBatch->markPaid($validated['paid_at']);
+        $audit->log(AuditLog::ACTION_BATCH_PAYOUT, $pfPayoutBatch, ['type' => 'pf', 'status' => 'paid', 'paid_at' => $validated['paid_at']]);
 
         return redirect()->route('pf.index')->with('success', 'Пакет ПФ закрыт.');
     }

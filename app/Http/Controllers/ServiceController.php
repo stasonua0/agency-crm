@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
+use App\Models\AuditLog;
 use App\Models\Service;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,9 +36,10 @@ class ServiceController extends Controller
         return Inertia::render('Services/Create');
     }
 
-    public function store(StoreServiceRequest $request): RedirectResponse
+    public function store(StoreServiceRequest $request, AuditLogger $audit): RedirectResponse
     {
-        Service::create($request->validated());
+        $service = Service::create($request->validated());
+        $audit->log(AuditLog::ACTION_CREATED, $service, ['name' => $service->name]);
 
         return redirect()->route('services.index')->with('success', 'Услуга создана.');
     }
@@ -48,16 +51,20 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function update(UpdateServiceRequest $request, Service $service): RedirectResponse
+    public function update(UpdateServiceRequest $request, Service $service, AuditLogger $audit): RedirectResponse
     {
-        $service->update($request->validated());
+        $validated = $request->validated();
+        $before = $service->only(array_keys($validated));
+        $service->update($validated);
+        $audit->log(AuditLog::ACTION_UPDATED, $service, ['before' => $before, 'after' => $service->only(array_keys($validated))]);
 
         return redirect()->route('services.index')->with('success', 'Услуга обновлена.');
     }
 
-    public function destroy(Service $service): RedirectResponse
+    public function destroy(Service $service, AuditLogger $audit): RedirectResponse
     {
         $service->archive();
+        $audit->log(AuditLog::ACTION_ARCHIVED, $service, ['name' => $service->name]);
 
         return redirect()->route('services.index')->with('success', 'Услуга архивирована.');
     }

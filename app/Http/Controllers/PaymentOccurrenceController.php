@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\PaymentOccurrence;
 use App\Models\RecurringItem;
 use App\Models\FinancialOperation;
+use App\Models\AuditLog;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -34,7 +36,7 @@ class PaymentOccurrenceController extends Controller
         ]);
     }
 
-    public function markPaid(Request $request, PaymentOccurrence $paymentOccurrence): RedirectResponse
+    public function markPaid(Request $request, PaymentOccurrence $paymentOccurrence, AuditLogger $audit): RedirectResponse
     {
         if ($paymentOccurrence->payment_method !== RecurringItem::METHOD_CASH) {
             throw ValidationException::withMessages([
@@ -54,12 +56,13 @@ class PaymentOccurrenceController extends Controller
 
         if ($paymentOccurrence->status !== PaymentOccurrence::STATUS_PAID) {
             $paymentOccurrence->markPaid($validated['paid_at']);
+            $audit->log(AuditLog::ACTION_PAID, $paymentOccurrence, ['paid_at' => $validated['paid_at'], 'amount' => $paymentOccurrence->amount_snapshot]);
         }
 
         return back()->with('success', 'Начисление отмечено оплаченным.');
     }
 
-    public function correct(Request $request, PaymentOccurrence $paymentOccurrence): RedirectResponse
+    public function correct(Request $request, PaymentOccurrence $paymentOccurrence, AuditLogger $audit): RedirectResponse
     {
         if ($paymentOccurrence->status !== PaymentOccurrence::STATUS_PAID) {
             throw ValidationException::withMessages([
@@ -74,12 +77,13 @@ class PaymentOccurrenceController extends Controller
             'comment' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $paymentOccurrence->createCorrection(
+        $operation = $paymentOccurrence->createCorrection(
             $validated['type'],
             $validated['amount'],
             $validated['paid_at'],
             $validated['comment'] ?? null,
         );
+        $audit->log(AuditLog::ACTION_CORRECTION, $paymentOccurrence, ['financial_operation_id' => $operation->id, ...$validated]);
 
         return back()->with('success', 'Корректировка создана.');
     }

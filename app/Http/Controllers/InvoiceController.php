@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInvoiceRequest;
+use App\Models\AuditLog;
 use App\Models\Invoice;
 use App\Models\PaymentOccurrence;
 use App\Models\RecurringItem;
 use App\Services\Invoices\InvoiceEmailService;
+use App\Services\Audit\AuditLogger;
 use App\Services\Tochka\TochkaClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +45,7 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(StoreInvoiceRequest $request, InvoiceEmailService $email): RedirectResponse
+    public function store(StoreInvoiceRequest $request, InvoiceEmailService $email, AuditLogger $audit): RedirectResponse
     {
         $occurrence = PaymentOccurrence::query()->findOrFail($request->integer('occurrence_id'));
 
@@ -60,20 +62,25 @@ class InvoiceController extends Controller
         });
 
         $sent = $email->send($invoice);
+        $audit->log(AuditLog::ACTION_CREATED, $invoice, ['invoice_number' => $invoice->invoice_number, 'amount' => $invoice->amount]);
+        if ($sent) {
+            $audit->log(AuditLog::ACTION_INVOICE_SENT, $invoice, ['email_to' => $invoice->fresh()->email_to]);
+        }
 
         return redirect()
             ->route('invoices.index')
             ->with('success', $sent ? 'Счёт создан и отправлен по email.' : 'Счёт создан. Email клиента не указан.');
     }
 
-    public function sendEmail(Invoice $invoice, InvoiceEmailService $email): RedirectResponse
+    public function sendEmail(Invoice $invoice, InvoiceEmailService $email, AuditLogger $audit): RedirectResponse
     {
         $email->sendOrFail($invoice);
+        $audit->log(AuditLog::ACTION_INVOICE_SENT, $invoice, ['email_to' => $invoice->fresh()->email_to]);
 
         return back()->with('success', 'Счёт отправлен по email.');
     }
 
-    public function sendTochka(Invoice $invoice, TochkaClient $tochka, InvoiceEmailService $email): RedirectResponse
+    public function sendTochka(Invoice $invoice, TochkaClient $tochka, InvoiceEmailService $email, AuditLogger $audit): RedirectResponse
     {
         if ($invoice->status === Invoice::STATUS_PAID || $invoice->status === Invoice::STATUS_CANCELLED) {
             throw ValidationException::withMessages([
@@ -114,6 +121,7 @@ class InvoiceController extends Controller
         });
 
         $email->send($invoice->fresh());
+        $audit->log(AuditLog::ACTION_INVOICE_SENT, $invoice->fresh(), ['channel' => 'tochka', 'external_id' => $invoice->fresh()->external_id]);
 
         return back()->with('success', 'Счёт создан в sandbox Точки.');
     }

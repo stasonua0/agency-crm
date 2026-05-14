@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Invoice;
+use App\Models\AuditLog;
 use App\Models\TochkaWebhookEvent;
+use App\Services\Audit\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -12,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class TochkaWebhookController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, AuditLogger $audit): JsonResponse
     {
         $payload = $request->json()->all() ?: $request->all();
         $raw = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?: $request->getContent();
@@ -33,6 +35,7 @@ class TochkaWebhookController extends Controller
             'status' => TochkaWebhookEvent::STATUS_RECEIVED,
             'payload' => $payload,
         ]);
+        $audit->log(AuditLog::ACTION_WEBHOOK, $event, ['external_id' => $event->external_id, 'event_id' => $event->event_id]);
 
         DB::transaction(function () use ($event, $payload) {
             $invoice = Invoice::query()

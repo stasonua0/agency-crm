@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyLookupController;
 use App\Http\Controllers\DashboardController;
@@ -54,10 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::get('acts', [ActController::class, 'index'])->name('acts.index');
     Route::post('acts', [ActController::class, 'store'])->name('acts.store');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
-
-    Route::get('/audit-log', fn () => Inertia::render('SectionPlaceholder', [
-        'title' => 'Журнал аудита',
-    ]))->name('audit.log.index');
+    Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit.log.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
