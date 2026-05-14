@@ -12,26 +12,57 @@ const roleLabels = {
     viewer: 'Наблюдатель',
 };
 
-const navigation = [
-    { label: 'Дашборд', routeName: 'dashboard', href: route('dashboard'), mark: 'ДБ' },
-    { label: 'Клиенты', routeName: 'clients.index', href: route('clients.index'), mark: 'КЛ' },
-    { label: 'Проекты', routeName: 'projects.index', href: route('projects.index'), mark: 'ПР' },
-    { label: 'Услуги', routeName: 'services.index', href: route('services.index'), mark: 'УС' },
-    { label: 'Регулярные операции', routeName: 'recurring-items.index', href: route('recurring-items.index'), mark: 'РО' },
-    { label: 'Начисления', routeName: 'payment.occurrences.index', href: route('payment.occurrences.index'), mark: 'НЧ' },
-    { label: 'Финансовые операции', routeName: 'financial.operations.index', href: route('financial.operations.index'), mark: 'ФО' },
-    { label: 'Счета', routeName: 'invoices.index', href: route('invoices.index'), mark: 'СЧ' },
-    { label: 'Акты', routeName: 'acts.index', href: route('acts.index'), mark: 'АК' },
-    { label: 'Получатели выплат', routeName: 'payees.index', href: route('payees.index'), mark: 'ПВ' },
-    { label: 'Выплаты', routeName: 'payouts.index', href: route('payouts.index'), mark: 'ВП' },
-    { label: 'Зарплаты', routeName: 'payroll.index', href: route('payroll.index'), mark: 'ЗП' },
-    { label: 'ПФ', routeName: 'pf.index', href: route('pf.index'), mark: 'ПФ' },
-    { label: 'Отчёты', routeName: 'reports.index', href: route('reports.index'), mark: 'ОТ' },
-    { label: 'Настройки', routeName: 'settings.index', href: route('settings.index'), mark: 'НС' },
-    { label: 'Журнал аудита', routeName: 'audit.log.index', href: route('audit.log.index'), mark: 'ЖА' },
+const navigationGroups = [
+    {
+        title: 'Рабочий стол',
+        items: [
+            { label: 'Дашборд', routeName: 'dashboard', href: route('dashboard'), mark: 'ДБ' },
+        ],
+    },
+    {
+        title: 'Справочники',
+        items: [
+            { label: 'Клиенты', routeName: 'clients.index', href: route('clients.index'), mark: 'КЛ' },
+            { label: 'Проекты', routeName: 'projects.index', href: route('projects.index'), mark: 'ПР' },
+            { label: 'Услуги', routeName: 'services.index', href: route('services.index'), mark: 'УС' },
+            { label: 'Получатели выплат', routeName: 'payees.index', href: route('payees.index'), mark: 'ПВ' },
+        ],
+    },
+    {
+        title: 'Финансы',
+        items: [
+            { label: 'Регулярные операции', routeName: 'recurring-items.index', href: route('recurring-items.index'), mark: 'РО' },
+            { label: 'Начисления', routeName: 'payment.occurrences.index', href: route('payment.occurrences.index'), mark: 'НЧ' },
+            { label: 'Финансовые операции', routeName: 'financial.operations.index', href: route('financial.operations.index'), mark: 'ФО' },
+            { label: 'Выплаты', routeName: 'payouts.index', href: route('payouts.index'), mark: 'ВП' },
+            { label: 'Зарплаты', routeName: 'payroll.index', href: route('payroll.index'), mark: 'ЗП' },
+            { label: 'ПФ', routeName: 'pf.index', href: route('pf.index'), mark: 'ПФ' },
+        ],
+    },
+    {
+        title: 'Документы',
+        items: [
+            { label: 'Счета', routeName: 'invoices.index', href: route('invoices.index'), mark: 'СЧ' },
+            { label: 'Акты', routeName: 'acts.index', href: route('acts.index'), mark: 'АК' },
+        ],
+    },
+    {
+        title: 'Аналитика',
+        items: [
+            { label: 'Отчёты', routeName: 'reports.index', href: route('reports.index'), mark: 'ОТ' },
+        ],
+    },
+    {
+        title: 'Администрирование',
+        items: [
+            { label: 'Настройки', routeName: 'settings.index', href: route('settings.index'), mark: 'НС' },
+            { label: 'Журнал аудита', routeName: 'audit.log.index', href: route('audit.log.index'), mark: 'ЖА' },
+        ],
+    },
 ];
 
 const isActive = (routeName) => route().current(routeName);
+const groupIsActive = (group) => group.items.some((item) => isActive(item.routeName));
 </script>
 
 <template>
@@ -51,24 +82,37 @@ const isActive = (routeName) => route().current(routeName);
             </div>
 
             <nav class="h-[calc(100vh-4rem)] overflow-y-auto px-3 py-4">
-                <Link
-                    v-for="item in navigation"
-                    :key="item.routeName"
-                    :href="item.href"
-                    class="mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
-                    :class="isActive(item.routeName)
-                        ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
-                    @click="showingSidebar = false"
+                <section
+                    v-for="group in navigationGroups"
+                    :key="group.title"
+                    class="mb-4"
                 >
-                    <span
-                        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-bold"
-                        :class="isActive(item.routeName) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'"
+                    <div
+                        class="mb-1 px-3 text-[11px] font-bold uppercase tracking-wide"
+                        :class="groupIsActive(group) ? 'text-indigo-700' : 'text-slate-400'"
                     >
-                        {{ item.mark }}
-                    </span>
-                    <span class="truncate">{{ item.label }}</span>
-                </Link>
+                        {{ group.title }}
+                    </div>
+
+                    <Link
+                        v-for="item in group.items"
+                        :key="item.routeName"
+                        :href="item.href"
+                        class="mb-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition"
+                        :class="isActive(item.routeName)
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'"
+                        @click="showingSidebar = false"
+                    >
+                        <span
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[11px] font-bold"
+                            :class="isActive(item.routeName) ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'"
+                        >
+                            {{ item.mark }}
+                        </span>
+                        <span class="truncate">{{ item.label }}</span>
+                    </Link>
+                </section>
             </nav>
         </aside>
 
@@ -80,7 +124,7 @@ const isActive = (routeName) => route().current(routeName);
                             type="button"
                             class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden"
                             @click="showingSidebar = !showingSidebar"
-                            aria-label="Toggle navigation"
+                            aria-label="Открыть меню"
                         >
                             <span class="flex flex-col gap-1">
                                 <span class="block h-0.5 w-4 bg-current"></span>
