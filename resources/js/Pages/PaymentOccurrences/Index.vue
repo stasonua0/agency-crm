@@ -23,9 +23,17 @@ const money = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFra
 const applyFilters = () => router.get(route('payment.occurrences.index'), form, { preserveState: true, replace: true });
 
 const selectedOccurrence = ref(null);
+const correctionOccurrence = ref(null);
 const today = new Date().toISOString().slice(0, 10);
 const paidForm = useForm({ paid_at: today });
+const correctionForm = useForm({
+    type: 'expense',
+    amount: '',
+    paid_at: today,
+    comment: '',
+});
 const canSubmitPaid = computed(() => Boolean(selectedOccurrence.value && paidForm.paid_at && !paidForm.processing));
+const canSubmitCorrection = computed(() => Boolean(correctionOccurrence.value && correctionForm.amount && correctionForm.paid_at && !correctionForm.processing));
 
 const openPaidDialog = (occurrence) => {
     selectedOccurrence.value = occurrence;
@@ -48,6 +56,34 @@ const markPaid = () => {
     paidForm.patch(route('payment.occurrences.mark-paid', selectedOccurrence.value.id), {
         preserveScroll: true,
         onSuccess: closePaidDialog,
+    });
+};
+
+const openCorrectionDialog = (occurrence) => {
+    correctionOccurrence.value = occurrence;
+    correctionForm.clearErrors();
+    correctionForm.type = occurrence.operation_type === 'income' ? 'expense' : 'income';
+    correctionForm.amount = '';
+    correctionForm.paid_at = today;
+    correctionForm.comment = `Корректировка начисления ${occurrence.period}`;
+};
+
+const closeCorrectionDialog = () => {
+    correctionOccurrence.value = null;
+    correctionForm.clearErrors();
+    correctionForm.reset();
+    correctionForm.type = 'expense';
+    correctionForm.paid_at = today;
+};
+
+const createCorrection = () => {
+    if (!correctionOccurrence.value) {
+        return;
+    }
+
+    correctionForm.post(route('payment.occurrences.corrections.store', correctionOccurrence.value.id), {
+        preserveScroll: true,
+        onSuccess: closeCorrectionDialog,
     });
 };
 </script>
@@ -122,6 +158,14 @@ const markPaid = () => {
                                 >
                                     Отметить оплачено
                                 </button>
+                                <button
+                                    v-if="occurrence.status === 'paid'"
+                                    type="button"
+                                    class="rounded-md border border-amber-200 px-3 py-2 text-xs font-semibold text-amber-700 hover:border-amber-300 hover:bg-amber-50"
+                                    @click="openCorrectionDialog(occurrence)"
+                                >
+                                    Корректировка
+                                </button>
                             </td>
                         </tr>
                         <tr v-if="occurrences.data.length === 0">
@@ -149,6 +193,47 @@ const markPaid = () => {
                     <button type="button" class="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="closePaidDialog">Отмена</button>
                     <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canSubmitPaid">
                         Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div v-if="correctionOccurrence" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
+            <form class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" @submit.prevent="createCorrection">
+                <h2 class="text-lg font-semibold text-slate-950">Корректировка начисления</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    {{ correctionOccurrence.client?.short_name }} · {{ correctionOccurrence.period }} · {{ money(correctionOccurrence.amount_snapshot) }} ₽
+                </p>
+
+                <div class="mt-5 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700" for="correction_type">Тип</label>
+                        <select id="correction_type" v-model="correctionForm.type" class="mt-2 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="income">Доход</option>
+                            <option value="expense">Расход</option>
+                        </select>
+                        <div v-if="correctionForm.errors.type" class="mt-2 text-sm text-red-600">{{ correctionForm.errors.type }}</div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700" for="correction_amount">Сумма</label>
+                        <input id="correction_amount" v-model="correctionForm.amount" type="number" min="0.01" step="0.01" class="mt-2 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                        <div v-if="correctionForm.errors.amount" class="mt-2 text-sm text-red-600">{{ correctionForm.errors.amount }}</div>
+                    </div>
+                </div>
+
+                <label class="mt-5 block text-sm font-medium text-slate-700" for="correction_paid_at">Дата корректировки</label>
+                <input id="correction_paid_at" v-model="correctionForm.paid_at" type="date" class="mt-2 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                <div v-if="correctionForm.errors.paid_at" class="mt-2 text-sm text-red-600">{{ correctionForm.errors.paid_at }}</div>
+
+                <label class="mt-5 block text-sm font-medium text-slate-700" for="correction_comment">Комментарий</label>
+                <textarea id="correction_comment" v-model="correctionForm.comment" rows="3" class="mt-2 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                <div v-if="correctionForm.errors.comment" class="mt-2 text-sm text-red-600">{{ correctionForm.errors.comment }}</div>
+                <div v-if="correctionForm.errors.payment_occurrence" class="mt-2 text-sm text-red-600">{{ correctionForm.errors.payment_occurrence }}</div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" class="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="closeCorrectionDialog">Отмена</button>
+                    <button type="submit" class="rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canSubmitCorrection">
+                        Создать
                     </button>
                 </div>
             </form>

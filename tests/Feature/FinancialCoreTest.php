@@ -13,6 +13,7 @@ use App\Models\Service;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LogicException;
 use Tests\TestCase;
 
 class FinancialCoreTest extends TestCase
@@ -261,6 +262,139 @@ class FinancialCoreTest extends TestCase
 
         $this->assertSame(PaymentOccurrence::STATUS_PLANNED, $occurrence->fresh()->status);
         $this->assertSame(0, FinancialOperation::query()->count());
+    }
+
+    public function test_paid_occurrence_cannot_change_protected_fields_or_be_deleted(): void
+    {
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $occurrence->markPaid('2026-05-10 12:00:00');
+
+        $this->expectException(LogicException::class);
+        $occurrence->fresh()->update(['amount_snapshot' => 120000]);
+    }
+
+    public function test_paid_occurrence_cannot_be_deleted(): void
+    {
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $occurrence->markPaid('2026-05-10 12:00:00');
+
+        $this->expectException(LogicException::class);
+        $occurrence->fresh()->delete();
+    }
+
+    public function test_paid_occurrence_can_create_one_correction_operation(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_OWNER]);
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $occurrence->markPaid('2026-05-10 12:00:00');
+
+        $this->actingAs($user)
+            ->post(route('payment.occurrences.corrections.store', $occurrence), [
+                'type' => FinancialOperation::TYPE_EXPENSE,
+                'amount' => 5000,
+                'paid_at' => '2026-05-11',
+                'comment' => 'Скидка после оплаты',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->actingAs($user)
+            ->post(route('payment.occurrences.corrections.store', $occurrence), [
+                'type' => FinancialOperation::TYPE_EXPENSE,
+                'amount' => 5000,
+                'paid_at' => '2026-05-11',
+                'comment' => 'Скидка после оплаты',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertSame(2, FinancialOperation::query()->count());
+        $this->assertDatabaseHas('financial_operations', [
+            'source' => FinancialOperation::SOURCE_CORRECTION,
+            'source_occurrence_id' => $occurrence->id,
+            'type' => FinancialOperation::TYPE_EXPENSE,
+            'amount' => '5000.00',
+            'category' => 'correction',
+            'comment' => 'Скидка после оплаты',
+        ]);
     }
 
     public function test_generate_occurrences_command_creates_due_occurrence_once_and_advances_date(): void

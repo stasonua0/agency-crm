@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 class PaymentOccurrence extends Model
 {
@@ -47,6 +48,24 @@ class PaymentOccurrence extends Model
             'due_date' => 'date',
             'paid_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (PaymentOccurrence $occurrence) {
+            if (
+                $occurrence->getOriginal('status') === self::STATUS_PAID
+                && $occurrence->isDirty(['amount_snapshot', 'client_id', 'due_date'])
+            ) {
+                throw new LogicException('Оплаченное начисление нельзя менять. Используйте корректировку.');
+            }
+        });
+
+        static::deleting(function (PaymentOccurrence $occurrence) {
+            if ($occurrence->status === self::STATUS_PAID) {
+                throw new LogicException('Оплаченное начисление нельзя удалять.');
+            }
+        });
     }
 
     public function recurringItem(): BelongsTo
@@ -141,5 +160,29 @@ class PaymentOccurrence extends Model
                 );
             }
         });
+    }
+
+    public function createCorrection(string $type, $amount, $paidAt, ?string $comment = null): FinancialOperation
+    {
+        if ($this->status !== self::STATUS_PAID) {
+            throw new LogicException('Корректировки доступны только для оплаченных начислений.');
+        }
+
+        return FinancialOperation::firstOrCreate(
+            [
+                'source' => FinancialOperation::SOURCE_CORRECTION,
+                'source_occurrence_id' => $this->id,
+            ],
+            [
+                'type' => $type,
+                'client_id' => $this->client_id,
+                'project_id' => $this->project_id,
+                'service_id' => $this->service_id,
+                'amount' => $amount,
+                'paid_at' => $paidAt,
+                'category' => 'correction',
+                'comment' => $comment ?: "Корректировка начисления {$this->period}",
+            ]
+        );
     }
 }

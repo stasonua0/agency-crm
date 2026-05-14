@@ -19,11 +19,13 @@ class FinancialOperation extends Model
 
     public const SOURCE_OCCURRENCE = 'occurrence';
 
+    public const SOURCE_CORRECTION = 'correction';
+
     public const SOURCE_PAYOUT_BATCH = 'payout_batch';
 
     public const TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE];
 
-    public const SOURCES = [self::SOURCE_MANUAL, self::SOURCE_OCCURRENCE, self::SOURCE_PAYOUT_BATCH];
+    public const SOURCES = [self::SOURCE_MANUAL, self::SOURCE_OCCURRENCE, self::SOURCE_CORRECTION, self::SOURCE_PAYOUT_BATCH];
 
     protected $fillable = [
         'type',
