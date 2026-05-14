@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ActController;
+use App\Http\Controllers\CompanyLookupController;
 use App\Http\Controllers\FinancialOperationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PayeeController;
@@ -28,6 +29,7 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
+    Route::post('clients/lookup-company', CompanyLookupController::class)->name('clients.lookup-company');
     Route::resource('services', ServiceController::class)->except('show');
     Route::resource('projects', ProjectController::class)->except('show');
     Route::resource('payees', PayeeController::class)->except('show');

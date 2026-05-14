@@ -42,4 +42,12 @@ return [
         'timeout' => env('TOCHKA_TIMEOUT', 15),
     ],
 
+    'dadata' => [
+        'sandbox' => env('DADATA_SANDBOX', true),
+        'base_url' => env('DADATA_BASE_URL', 'https://suggestions.dadata.ru'),
+        'token' => env('DADATA_TOKEN'),
+        'secret' => env('DADATA_SECRET'),
+        'timeout' => env('DADATA_TIMEOUT', 15),
+    ],
+
 ];

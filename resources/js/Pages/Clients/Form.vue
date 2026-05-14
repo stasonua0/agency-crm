@@ -5,8 +5,9 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Link } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
-defineProps({
+const props = defineProps({
     form: {
         type: Object,
         required: true,
@@ -19,6 +20,12 @@ defineProps({
 
 defineEmits(['submit']);
 
+const lookup = ref({
+    loading: false,
+    error: '',
+    company: null,
+});
+
 const clientTypes = [
     { value: 'legal_entity', label: 'Юридическое лицо' },
     { value: 'individual_entrepreneur', label: 'ИП' },
@@ -29,6 +36,52 @@ const statuses = [
     { value: 'active', label: 'Активен' },
     { value: 'archived', label: 'Архив' },
 ];
+
+const canLookup = computed(() => /^\d{10}(\d{2})?$/.test(String(props.form.inn || '').trim()));
+
+const lookupCompany = async () => {
+    lookup.value = { loading: true, error: '', company: null };
+
+    try {
+        const response = await fetch(route('clients.lookup-company'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+            },
+            body: JSON.stringify({ inn: props.form.inn }),
+        });
+
+        const payload = await response.json();
+
+        if (!response.ok) {
+            throw new Error(payload.message || 'Не удалось получить данные по ИНН.');
+        }
+
+        lookup.value = { loading: false, error: '', company: payload.data };
+    } catch (error) {
+        lookup.value = {
+            loading: false,
+            error: error.message || 'Не удалось получить данные по ИНН.',
+            company: null,
+        };
+    }
+};
+
+const applyLookup = () => {
+    if (!lookup.value.company) return;
+
+    const company = lookup.value.company;
+    props.form.type = company.type || props.form.type;
+    props.form.legal_name = company.legal_name || props.form.legal_name;
+    props.form.short_name = company.short_name || props.form.short_name;
+    props.form.inn = company.inn || props.form.inn;
+    props.form.kpp = company.kpp || '';
+    props.form.ogrn = company.ogrn || '';
+    props.form.legal_address = company.legal_address || '';
+    lookup.value.company = null;
+};
 </script>
 
 <template>
@@ -55,6 +108,39 @@ const statuses = [
             </div>
         </div>
 
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div class="grid gap-3 lg:grid-cols-[1fr_auto]">
+                <div>
+                    <InputLabel for="inn" value="ИНН" />
+                    <TextInput id="inn" v-model="form.inn" inputmode="numeric" class="mt-1 block w-full" />
+                    <InputError class="mt-2" :message="form.errors.inn" />
+                    <div v-if="lookup.error" class="mt-2 text-sm text-red-600">{{ lookup.error }}</div>
+                </div>
+                <div class="flex items-end">
+                    <SecondaryButton type="button" :disabled="lookup.loading || !canLookup" @click="lookupCompany">
+                        {{ lookup.loading ? 'Ищем...' : 'Заполнить по ИНН' }}
+                    </SecondaryButton>
+                </div>
+            </div>
+
+            <div v-if="lookup.company" class="mt-4 rounded-md border border-indigo-200 bg-white p-4">
+                <div class="text-sm font-semibold text-slate-950">Предпросмотр данных</div>
+                <dl class="mt-3 grid gap-3 text-sm md:grid-cols-2">
+                    <div><dt class="text-slate-500">Название</dt><dd class="font-medium text-slate-950">{{ lookup.company.legal_name }}</dd></div>
+                    <div><dt class="text-slate-500">Кратко</dt><dd class="font-medium text-slate-950">{{ lookup.company.short_name }}</dd></div>
+                    <div><dt class="text-slate-500">ИНН</dt><dd class="font-medium text-slate-950">{{ lookup.company.inn }}</dd></div>
+                    <div><dt class="text-slate-500">КПП</dt><dd class="font-medium text-slate-950">{{ lookup.company.kpp || '-' }}</dd></div>
+                    <div><dt class="text-slate-500">ОГРН / ОГРНИП</dt><dd class="font-medium text-slate-950">{{ lookup.company.ogrn || '-' }}</dd></div>
+                    <div><dt class="text-slate-500">Источник</dt><dd class="font-medium text-slate-950">{{ lookup.company.source }}</dd></div>
+                    <div class="md:col-span-2"><dt class="text-slate-500">Адрес</dt><dd class="font-medium text-slate-950">{{ lookup.company.legal_address || '-' }}</dd></div>
+                </dl>
+                <div class="mt-4 flex justify-end gap-3">
+                    <SecondaryButton type="button" @click="lookup.company = null">Отменить</SecondaryButton>
+                    <PrimaryButton type="button" @click="applyLookup">Применить</PrimaryButton>
+                </div>
+            </div>
+        </div>
+
         <div class="grid gap-5 lg:grid-cols-2">
             <div>
                 <InputLabel for="legal_name" value="Юридическое название" />
@@ -68,12 +154,7 @@ const statuses = [
             </div>
         </div>
 
-        <div class="grid gap-5 lg:grid-cols-3">
-            <div>
-                <InputLabel for="inn" value="ИНН" />
-                <TextInput id="inn" v-model="form.inn" class="mt-1 block w-full" />
-                <InputError class="mt-2" :message="form.errors.inn" />
-            </div>
+        <div class="grid gap-5 lg:grid-cols-2">
             <div>
                 <InputLabel for="kpp" value="КПП" />
                 <TextInput id="kpp" v-model="form.kpp" class="mt-1 block w-full" />
