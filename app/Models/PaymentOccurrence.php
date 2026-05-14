@@ -103,6 +103,11 @@ class PaymentOccurrence extends Model
         return $this->hasOne(ContractorSettlement::class);
     }
 
+    public function pfBatchItem(): HasOne
+    {
+        return $this->hasOne(PfPayoutBatchItem::class);
+    }
+
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
         return $query->when($search, function (Builder $query, string $search) {

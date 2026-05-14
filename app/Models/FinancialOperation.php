@@ -25,9 +25,11 @@ class FinancialOperation extends Model
 
     public const SOURCE_PAYROLL = 'payroll';
 
+    public const SOURCE_PF_PAYOUT_BATCH = 'pf_payout_batch';
+
     public const TYPES = [self::TYPE_INCOME, self::TYPE_EXPENSE];
 
-    public const SOURCES = [self::SOURCE_MANUAL, self::SOURCE_OCCURRENCE, self::SOURCE_CORRECTION, self::SOURCE_PAYOUT_BATCH, self::SOURCE_PAYROLL];
+    public const SOURCES = [self::SOURCE_MANUAL, self::SOURCE_OCCURRENCE, self::SOURCE_CORRECTION, self::SOURCE_PAYOUT_BATCH, self::SOURCE_PAYROLL, self::SOURCE_PF_PAYOUT_BATCH];
 
     protected $fillable = [
         'type',
@@ -41,6 +43,7 @@ class FinancialOperation extends Model
         'source_occurrence_id',
         'source_payout_batch_id',
         'source_payroll_payout_id',
+        'source_pf_payout_batch_id',
         'comment',
     ];
 
@@ -80,6 +83,11 @@ class FinancialOperation extends Model
     public function payrollPayout(): BelongsTo
     {
         return $this->belongsTo(PayrollPayout::class, 'source_payroll_payout_id');
+    }
+
+    public function pfPayoutBatch(): BelongsTo
+    {
+        return $this->belongsTo(PfPayoutBatch::class, 'source_pf_payout_batch_id');
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder
