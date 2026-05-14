@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
@@ -40,6 +41,12 @@ const modelName = (value) => value ? value.split('\\\\').pop() : '-';
                 <p class="text-sm text-slate-500">Неизменяемая история ключевых действий</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Журнал аудита хранит историю важных действий: создание, изменение, оплату, корректировки, webhook и пакетные выплаты. Через UI записи не редактируются."
+            :links="['Клиенты', 'Начисления', 'Счета', 'Выплаты', 'Webhook']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <form class="grid gap-3 border-b border-slate-200 p-5 md:grid-cols-4" @submit.prevent="applyFilters">

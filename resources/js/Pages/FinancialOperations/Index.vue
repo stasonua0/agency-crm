@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
@@ -30,6 +31,12 @@ const applyFilters = () => router.get(route('financial.operations.index'), form,
                 <p class="text-sm text-slate-500">Единый реестр фактических денег</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Финансовые операции — единый реестр фактически полученных и потраченных денег. Отчёты считают прибыль только по этому разделу, поэтому сюда попадают оплаты начислений, выплаты и ручные корректировки."
+            :links="['Начисления', 'Выплаты', 'Зарплаты', 'ПФ', 'Отчёты']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <form class="grid gap-3 border-b border-slate-200 p-5 md:grid-cols-4" @submit.prevent="applyFilters">

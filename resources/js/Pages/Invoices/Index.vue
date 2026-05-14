@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -42,6 +43,12 @@ const sendEmail = (invoice) => router.post(route('invoices.email.store', invoice
                 <p class="text-sm text-slate-500">Один счёт на одно безналичное начисление</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Счета создаются по безналичным начислениям. Один активный счёт привязан к одному начислению, может быть отправлен клиенту и затем закрыт оплатой через webhook Точки или ручной статус."
+            :links="['Начисления', 'Точка Банк', 'Email', 'Финансовые операции', 'Акты']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="grid gap-5 border-b border-slate-200 p-5 xl:grid-cols-[1fr_420px]">

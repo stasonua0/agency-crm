@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -40,6 +41,12 @@ const stopItem = (item) => {
                 <p class="text-sm text-slate-500">Шаблоны доходов и расходов</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Регулярные операции — шаблоны будущих начислений: абонплаты, расходы, подрядчики и периодичность. Ежедневная команда генерации создаёт из них начисления со snapshot-данными."
+            :links="['Клиенты', 'Проекты', 'Услуги', 'Начисления', 'Подрядчики']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-end xl:justify-between">

@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 
@@ -27,6 +28,12 @@ const summary = [
                 <p class="text-sm text-slate-500">Финансовое состояние по фактическим операциям</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Дашборд даёт быстрый срез финансового состояния: доходы, расходы, прибыль, ожидаемые оплаты и прогноз. Детализация находится в отчётах и финансовых операциях."
+            :links="['Отчёты', 'Финансовые операции', 'Начисления']"
+        />
 
         <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
             <article

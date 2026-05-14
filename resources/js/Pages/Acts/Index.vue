@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -41,6 +42,12 @@ const submit = () => form.post(route('acts.store'), { preserveScroll: true, onSu
                 <p class="text-sm text-slate-500">Акты без электронной подписи</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Акты фиксируют закрытие выполненных работ по начислению и счёту. Электронная подпись пока не реализована, поэтому здесь ведётся статус документа и ссылка на файл."
+            :links="['Начисления', 'Счета', 'Клиенты', 'Услуги']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="grid gap-5 border-b border-slate-200 p-5 xl:grid-cols-[1fr_420px]">

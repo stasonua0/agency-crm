@@ -1,5 +1,6 @@
 <script setup>
 import InputError from '@/Components/InputError.vue';
+import HelpPanel from '@/Components/HelpPanel.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -60,6 +61,12 @@ const refreshModels = () => {
                 <p class="text-sm text-slate-500">Реквизиты студии, шаблоны писем и ИИ-заполнение</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Настройки задают реквизиты студии, шаблон письма со счётом и параметры ИИ-заполнения. Эти данные используются при создании документов, отправке email и разборе заявок."
+            :links="['Счета', 'Акты', 'Email', 'ИИ-заполнение']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <form class="space-y-8" @submit.prevent="submit">

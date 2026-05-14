@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
@@ -82,6 +83,12 @@ const markPaid = () => {
                 <p class="text-sm text-slate-500">Пакетные выплаты по pending-взаиморасчётам</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Выплаты объединяют несколько pending-взаиморасчётов одного получателя в один пакет. После подтверждения создаётся одна расходная финансовая операция и закрываются выбранные строки."
+            :links="['Получатели выплат', 'Начисления', 'Финансовые операции', 'Audit Log']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 p-5">

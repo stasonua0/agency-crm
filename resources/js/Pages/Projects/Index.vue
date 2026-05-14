@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -61,6 +62,12 @@ const archiveProject = (project) => {
                 <p class="text-sm text-slate-500">Справочник проектов</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Проекты связывают клиента с работами и бюджетом. Оплачено и остаток считаются по фактическим финансовым операциям, поэтому проект нужен для контроля долга и прибыльности."
+            :links="['Клиенты', 'Услуги', 'Начисления', 'Финансовые операции', 'Отчёты']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-end xl:justify-between">

@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -45,6 +46,12 @@ const archivePayee = (payee) => {
                 <p class="text-sm text-slate-500">Справочник сотрудников, подрядчиков и других получателей</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Получатели выплат — справочник сотрудников, подрядчиков, ПФ и прочих контрагентов, которым CRM формирует расходы. Реквизиты сохраняются в выплатах snapshot-ом."
+            :links="['Выплаты', 'Зарплаты', 'ПФ', 'Финансовые операции']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-end xl:justify-between">

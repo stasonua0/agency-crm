@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { reactive } from 'vue';
@@ -30,6 +31,12 @@ const applyFilters = () => router.get(route('reports.index'), form, { preserveSt
                 <p class="text-sm text-slate-500">Cash basis: фактические доходы минус фактические расходы</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Отчёты показывают доходы, расходы и прибыль по cash basis: считаются только фактические финансовые операции, а не плановые начисления."
+            :links="['Финансовые операции', 'Клиенты', 'Услуги', 'Проекты']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
             <form class="grid gap-3 md:grid-cols-5" @submit.prevent="applyFilters">

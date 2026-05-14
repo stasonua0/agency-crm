@@ -1,4 +1,5 @@
 <script setup>
+import HelpPanel from '@/Components/HelpPanel.vue';
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -37,6 +38,12 @@ const deletePayout = (payout) => {
                 <p class="text-sm text-slate-500">Зарплатные выплаты, бонусы и авансы</p>
             </div>
         </template>
+
+        <HelpPanel
+            title="Для чего этот раздел"
+            description="Зарплаты фиксируют выплаты сотрудникам: оклад, бонусы и авансы. При статусе “оплачено” CRM создаёт расходную финансовую операцию без распределения по проектам."
+            :links="['Получатели выплат', 'Финансовые операции', 'Отчёты']"
+        />
 
         <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-4 border-b border-slate-200 p-5 xl:flex-row xl:items-end xl:justify-between">
