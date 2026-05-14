@@ -123,6 +123,90 @@ class FinancialCoreTest extends TestCase
         ]);
     }
 
+    public function test_cash_occurrence_can_be_marked_paid_from_http(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_OWNER]);
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('payment.occurrences.mark-paid', $occurrence), [
+                'paid_at' => '2026-05-10',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('payment_occurrences', [
+            'id' => $occurrence->id,
+            'status' => PaymentOccurrence::STATUS_PAID,
+        ]);
+        $this->assertSame(1, FinancialOperation::query()->count());
+    }
+
+    public function test_bank_transfer_occurrence_cannot_be_marked_paid_manually(): void
+    {
+        $user = User::factory()->create(['role' => User::ROLE_OWNER]);
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_BANK_TRANSFER,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_BANK_TRANSFER,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $this->actingAs($user)
+            ->patch(route('payment.occurrences.mark-paid', $occurrence), [
+                'paid_at' => '2026-05-10',
+            ])
+            ->assertSessionHasErrors('payment_occurrence');
+
+        $this->assertSame(PaymentOccurrence::STATUS_PLANNED, $occurrence->fresh()->status);
+        $this->assertSame(0, FinancialOperation::query()->count());
+    }
+
     public function test_generate_occurrences_command_creates_due_occurrence_once_and_advances_date(): void
     {
         CarbonImmutable::setTestNow('2026-05-14 10:00:00');

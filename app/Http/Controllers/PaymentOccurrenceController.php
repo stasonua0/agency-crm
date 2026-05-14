@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PaymentOccurrence;
+use App\Models\RecurringItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,5 +30,30 @@ class PaymentOccurrenceController extends Controller
             'occurrences' => $occurrences,
             'filters' => $filters,
         ]);
+    }
+
+    public function markPaid(Request $request, PaymentOccurrence $paymentOccurrence): RedirectResponse
+    {
+        if ($paymentOccurrence->payment_method !== RecurringItem::METHOD_CASH) {
+            throw ValidationException::withMessages([
+                'payment_occurrence' => 'Вручную можно оплачивать только наличные начисления.',
+            ]);
+        }
+
+        if ($paymentOccurrence->status === PaymentOccurrence::STATUS_CANCELLED) {
+            throw ValidationException::withMessages([
+                'payment_occurrence' => 'Отменённое начисление нельзя отметить оплаченным.',
+            ]);
+        }
+
+        $validated = $request->validate([
+            'paid_at' => ['required', 'date'],
+        ]);
+
+        if ($paymentOccurrence->status !== PaymentOccurrence::STATUS_PAID) {
+            $paymentOccurrence->markPaid($validated['paid_at']);
+        }
+
+        return back()->with('success', 'Начисление отмечено оплаченным.');
     }
 }

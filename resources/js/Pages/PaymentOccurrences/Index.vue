@@ -1,8 +1,8 @@
 <script setup>
 import Pagination from '@/Components/Pagination.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed, reactive, ref } from 'vue';
 
 const props = defineProps({
     occurrences: { type: Object, required: true },
@@ -21,6 +21,35 @@ const statusLabels = { planned: 'Запланировано', paid: 'Оплач�
 const methodLabels = { cash: 'Наличные', bank_transfer: 'Безналичный перевод' };
 const money = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const applyFilters = () => router.get(route('payment.occurrences.index'), form, { preserveState: true, replace: true });
+
+const selectedOccurrence = ref(null);
+const today = new Date().toISOString().slice(0, 10);
+const paidForm = useForm({ paid_at: today });
+const canSubmitPaid = computed(() => Boolean(selectedOccurrence.value && paidForm.paid_at && !paidForm.processing));
+
+const openPaidDialog = (occurrence) => {
+    selectedOccurrence.value = occurrence;
+    paidForm.clearErrors();
+    paidForm.paid_at = today;
+};
+
+const closePaidDialog = () => {
+    selectedOccurrence.value = null;
+    paidForm.clearErrors();
+    paidForm.reset();
+    paidForm.paid_at = today;
+};
+
+const markPaid = () => {
+    if (!selectedOccurrence.value) {
+        return;
+    }
+
+    paidForm.patch(route('payment.occurrences.mark-paid', selectedOccurrence.value.id), {
+        preserveScroll: true,
+        onSuccess: closePaidDialog,
+    });
+};
 </script>
 
 <template>
@@ -62,6 +91,7 @@ const applyFilters = () => router.get(route('payment.occurrences.index'), form, 
                             <th class="px-5 py-3">Подрядчик</th>
                             <th class="px-5 py-3">Способ</th>
                             <th class="px-5 py-3">Статус</th>
+                            <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200">
@@ -81,15 +111,47 @@ const applyFilters = () => router.get(route('payment.occurrences.index'), form, 
                             <td class="px-5 py-4">{{ methodLabels[occurrence.payment_method] }}</td>
                             <td class="px-5 py-4">
                                 <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">{{ statusLabels[occurrence.status] }}</span>
+                                <div v-if="occurrence.paid_at" class="mt-1 text-xs text-slate-500">{{ occurrence.paid_at }}</div>
+                            </td>
+                            <td class="px-5 py-4 text-right">
+                                <button
+                                    v-if="occurrence.payment_method === 'cash' && occurrence.status === 'planned'"
+                                    type="button"
+                                    class="rounded-md border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:border-indigo-300 hover:bg-indigo-50"
+                                    @click="openPaidDialog(occurrence)"
+                                >
+                                    Отметить оплачено
+                                </button>
                             </td>
                         </tr>
                         <tr v-if="occurrences.data.length === 0">
-                            <td class="px-5 py-8 text-center text-slate-500" colspan="8">Начисления не найдены</td>
+                            <td class="px-5 py-8 text-center text-slate-500" colspan="9">Начисления не найдены</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
             <div class="border-t border-slate-200 p-5"><Pagination :links="occurrences.links" /></div>
         </section>
+
+        <div v-if="selectedOccurrence" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 px-4">
+            <form class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" @submit.prevent="markPaid">
+                <h2 class="text-lg font-semibold text-slate-950">Отметить оплату</h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    {{ selectedOccurrence.client?.short_name }} · {{ selectedOccurrence.period }} · {{ money(selectedOccurrence.amount_snapshot) }} ₽
+                </p>
+
+                <label class="mt-5 block text-sm font-medium text-slate-700" for="paid_at">Дата оплаты</label>
+                <input id="paid_at" v-model="paidForm.paid_at" type="date" class="mt-2 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500" />
+                <div v-if="paidForm.errors.paid_at" class="mt-2 text-sm text-red-600">{{ paidForm.errors.paid_at }}</div>
+                <div v-if="paidForm.errors.payment_occurrence" class="mt-2 text-sm text-red-600">{{ paidForm.errors.payment_occurrence }}</div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" class="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" @click="closePaidDialog">Отмена</button>
+                    <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="!canSubmitPaid">
+                        Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
     </AuthenticatedLayout>
 </template>

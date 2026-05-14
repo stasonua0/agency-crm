@@ -24,6 +24,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('projects', ProjectController::class)->except('show');
     Route::resource('recurring-items', RecurringItemController::class)->except('show');
     Route::get('payment-occurrences', [PaymentOccurrenceController::class, 'index'])->name('payment.occurrences.index');
+    Route::patch('payment-occurrences/{paymentOccurrence}/mark-paid', [PaymentOccurrenceController::class, 'markPaid'])->name('payment.occurrences.mark-paid');
     Route::get('financial-operations', [FinancialOperationController::class, 'index'])->name('financial.operations.index');
 
     $sections = [
