@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\RecurringItem;
 use App\Models\Service;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -120,6 +121,85 @@ class FinancialCoreTest extends TestCase
             'source_occurrence_id' => $occurrence->id,
             'amount' => '100000.00',
         ]);
+    }
+
+    public function test_generate_occurrences_command_creates_due_occurrence_once_and_advances_date(): void
+    {
+        CarbonImmutable::setTestNow('2026-05-14 10:00:00');
+
+        [$client, $project, $service] = $this->directoryFixture();
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_BANK_TRANSFER,
+            'contractor_name' => 'Подрядчик',
+            'contractor_amount' => 25000,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $this->artisan('crm:generate-occurrences')->assertSuccessful();
+        $this->artisan('crm:generate-occurrences')->assertSuccessful();
+
+        $this->assertSame(1, PaymentOccurrence::query()->count());
+        $this->assertDatabaseHas('payment_occurrences', [
+            'recurring_item_id' => $item->id,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'amount_snapshot' => '100000.00',
+            'contractor_amount_snapshot' => '25000.00',
+            'contractor_name_snapshot' => 'Подрядчик',
+            'payment_method' => RecurringItem::METHOD_BANK_TRANSFER,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+        $this->assertSame('2026-06-01', $item->fresh()->next_payment_date->toDateString());
+
+        CarbonImmutable::setTestNow();
+    }
+
+    public function test_generate_occurrences_command_ignores_stopped_and_future_items(): void
+    {
+        CarbonImmutable::setTestNow('2026-05-14 10:00:00');
+
+        [$client, $project, $service] = $this->directoryFixture();
+
+        RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_STOPPED,
+        ]);
+
+        RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 120000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-06-01',
+            'next_payment_date' => '2026-06-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $this->artisan('crm:generate-occurrences')->assertSuccessful();
+
+        $this->assertSame(0, PaymentOccurrence::query()->count());
+
+        CarbonImmutable::setTestNow();
     }
 
     private function directoryFixture(): array
