@@ -46,6 +46,11 @@ class Payee extends Model
         return $this->hasMany(ContractorSettlement::class);
     }
 
+    public function payoutBatches(): HasMany
+    {
+        return $this->hasMany(PayoutBatch::class);
+    }
+
     public function archive(): void
     {
         $this->forceFill(['status' => self::STATUS_ARCHIVED])->save();

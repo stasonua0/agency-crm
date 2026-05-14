@@ -69,6 +69,11 @@ class FinancialOperation extends Model
         return $this->belongsTo(PaymentOccurrence::class, 'source_occurrence_id');
     }
 
+    public function payoutBatch(): BelongsTo
+    {
+        return $this->belongsTo(PayoutBatch::class, 'source_payout_batch_id');
+    }
+
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
         return $query->when($search, function (Builder $query, string $search) {
