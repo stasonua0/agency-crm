@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\ClientAiAutofillController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyLookupController;
 use App\Http\Controllers\DashboardController;
@@ -33,6 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('clients/create', [ClientController::class, 'create'])->name('clients.create');
     Route::get('clients/{client}/edit', [ClientController::class, 'edit'])->name('clients.edit');
     Route::post('clients/lookup-company', CompanyLookupController::class)->name('clients.lookup-company');
+    Route::post('clients/ai-autofill', ClientAiAutofillController::class)->name('clients.ai-autofill');
 
     Route::get('services', [ServiceController::class, 'index'])->name('services.index');
     Route::get('services/create', [ServiceController::class, 'create'])->name('services.create');

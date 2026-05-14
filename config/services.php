@@ -47,6 +47,13 @@ return [
         'timeout' => env('TOCHKA_TIMEOUT', 15),
     ],
 
+    'ai_autofill' => [
+        'provider' => env('AI_AUTOFILL_PROVIDER', 'stub'),
+        'model' => env('AI_AUTOFILL_MODEL'),
+        'api_key' => env('AI_AUTOFILL_API_KEY'),
+        'timeout' => env('AI_AUTOFILL_TIMEOUT', 30),
+    ],
+
     'dadata' => [
         'sandbox' => env('DADATA_SANDBOX', true),
         'base_url' => env('DADATA_BASE_URL', 'https://suggestions.dadata.ru'),
