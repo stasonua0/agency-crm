@@ -70,6 +70,12 @@ class PayrollPayout extends Model
     public function markPaid(): void
     {
         DB::transaction(function () {
+            $payout = self::query()->whereKey($this->id)->lockForUpdate()->firstOrFail();
+
+            if ($payout->status === self::STATUS_PAID && $payout->financialOperation()->exists()) {
+                return;
+            }
+
             $this->forceFill(['status' => self::STATUS_PAID])->save();
 
             FinancialOperation::firstOrCreate(

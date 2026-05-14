@@ -68,4 +68,9 @@ class User extends Authenticatable
     {
         return $this->hasRole(self::ROLE_OWNER);
     }
+
+    public function canManageFinance(): bool
+    {
+        return in_array($this->role, [self::ROLE_OWNER, self::ROLE_FINANCE_MANAGER], true);
+    }
 }
