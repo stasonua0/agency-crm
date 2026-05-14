@@ -22,6 +22,8 @@ class StudioSetting extends Model
         'email',
         'phone',
         'vat_enabled',
+        'invoice_email_subject',
+        'invoice_email_body',
     ];
 
     protected function casts(): array

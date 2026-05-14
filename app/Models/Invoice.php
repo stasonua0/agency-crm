@@ -32,6 +32,9 @@ class Invoice extends Model
         'invoice_pdf_path',
         'external_id',
         'raw_response',
+        'email_to',
+        'email_sent_at',
+        'email_raw_response',
     ];
 
     protected function casts(): array
@@ -40,6 +43,8 @@ class Invoice extends Model
             'invoice_date' => 'date',
             'amount' => 'decimal:2',
             'raw_response' => 'array',
+            'email_sent_at' => 'datetime',
+            'email_raw_response' => 'array',
         ];
     }
 

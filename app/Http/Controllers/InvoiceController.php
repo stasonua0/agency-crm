@@ -6,6 +6,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
 use App\Models\PaymentOccurrence;
 use App\Models\RecurringItem;
+use App\Services\Invoices\InvoiceEmailService;
 use App\Services\Tochka\TochkaClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -42,22 +43,37 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function store(StoreInvoiceRequest $request): RedirectResponse
+    public function store(StoreInvoiceRequest $request, InvoiceEmailService $email): RedirectResponse
     {
         $occurrence = PaymentOccurrence::query()->findOrFail($request->integer('occurrence_id'));
 
-        $invoice = Invoice::create([
-            ...$request->validated(),
-            'client_id' => $occurrence->client_id,
-            'amount' => $occurrence->amount_snapshot,
-        ]);
+        $invoice = DB::transaction(function () use ($request, $occurrence) {
+            $invoice = Invoice::create([
+                ...$request->validated(),
+                'client_id' => $occurrence->client_id,
+                'amount' => $occurrence->amount_snapshot,
+            ]);
 
-        $occurrence->forceFill(['invoice_id' => $invoice->id])->save();
+            $occurrence->forceFill(['invoice_id' => $invoice->id])->save();
 
-        return redirect()->route('invoices.index')->with('success', 'Счёт создан.');
+            return $invoice;
+        });
+
+        $sent = $email->send($invoice);
+
+        return redirect()
+            ->route('invoices.index')
+            ->with('success', $sent ? 'Счёт создан и отправлен по email.' : 'Счёт создан. Email клиента не указан.');
     }
 
-    public function sendTochka(Invoice $invoice, TochkaClient $tochka): RedirectResponse
+    public function sendEmail(Invoice $invoice, InvoiceEmailService $email): RedirectResponse
+    {
+        $email->sendOrFail($invoice);
+
+        return back()->with('success', 'Счёт отправлен по email.');
+    }
+
+    public function sendTochka(Invoice $invoice, TochkaClient $tochka, InvoiceEmailService $email): RedirectResponse
     {
         if ($invoice->status === Invoice::STATUS_PAID || $invoice->status === Invoice::STATUS_CANCELLED) {
             throw ValidationException::withMessages([
@@ -83,9 +99,6 @@ class InvoiceController extends Controller
             }
 
             $fileResponse = $tochka->getInvoiceFile($externalId);
-            $emailResponse = $invoice->client?->invoice_email
-                ? $tochka->sendInvoiceEmail($externalId, $invoice->client->invoice_email)
-                : null;
 
             $invoice->update([
                 'external_id' => $externalId,
@@ -96,10 +109,11 @@ class InvoiceController extends Controller
                 'raw_response' => [
                     'create' => $createResponse,
                     'file' => $fileResponse,
-                    'email' => $emailResponse,
                 ],
             ]);
         });
+
+        $email->send($invoice->fresh());
 
         return back()->with('success', 'Счёт создан в sandbox Точки.');
     }

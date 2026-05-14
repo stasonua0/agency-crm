@@ -30,6 +30,7 @@ const money = (value) => Number(value || 0).toLocaleString('ru-RU', { minimumFra
 const applyFilters = () => router.get(route('invoices.index'), filters, { preserveState: true, replace: true });
 const submit = () => form.post(route('invoices.store'), { preserveScroll: true, onSuccess: () => form.reset() });
 const sendTochka = (invoice) => router.post(route('invoices.tochka.store', invoice.id), {}, { preserveScroll: true });
+const sendEmail = (invoice) => router.post(route('invoices.email.store', invoice.id), {}, { preserveScroll: true });
 </script>
 
 <template>
@@ -84,6 +85,7 @@ const sendTochka = (invoice) => router.post(route('invoices.tochka.store', invoi
                             <th class="px-5 py-3">Дата</th>
                             <th class="px-5 py-3">Сумма</th>
                             <th class="px-5 py-3">Статус</th>
+                            <th class="px-5 py-3">Email</th>
                             <th class="px-5 py-3"></th>
                         </tr>
                     </thead>
@@ -98,21 +100,35 @@ const sendTochka = (invoice) => router.post(route('invoices.tochka.store', invoi
                             <td class="px-5 py-4">{{ invoice.invoice_date }}</td>
                             <td class="px-5 py-4 font-semibold">{{ money(invoice.amount) }} ₽</td>
                             <td class="px-5 py-4">{{ statusLabels[invoice.status] }}</td>
+                            <td class="px-5 py-4">
+                                <div v-if="invoice.email_sent_at" class="text-xs font-semibold text-emerald-700">Отправлен</div>
+                                <div v-if="invoice.email_to" class="text-xs text-slate-500">{{ invoice.email_to }}</div>
+                                <div v-if="!invoice.email_sent_at" class="text-xs text-slate-400">Не отправлен</div>
+                            </td>
                             <td class="px-5 py-4 text-right">
-                                <button
-                                    v-if="!invoice.external_id && !['paid', 'cancelled'].includes(invoice.status)"
-                                    type="button"
-                                    class="rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
-                                    @click="sendTochka(invoice)"
-                                >
-                                    В Точку
-                                </button>
-                                <a v-else-if="invoice.invoice_url" :href="invoice.invoice_url" target="_blank" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">PDF</a>
-                                <span v-else class="text-xs text-slate-400">-</span>
+                                <div class="flex justify-end gap-2">
+                                    <button
+                                        v-if="!invoice.external_id && !['paid', 'cancelled'].includes(invoice.status)"
+                                        type="button"
+                                        class="rounded-md bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                                        @click="sendTochka(invoice)"
+                                    >
+                                        В Точку
+                                    </button>
+                                    <button
+                                        v-if="invoice.client?.invoice_email && !['paid', 'cancelled'].includes(invoice.status)"
+                                        type="button"
+                                        class="rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                        @click="sendEmail(invoice)"
+                                    >
+                                        Email
+                                    </button>
+                                    <a v-if="invoice.invoice_url" :href="invoice.invoice_url" target="_blank" class="rounded-md border border-slate-300 px-3 py-2 text-xs font-semibold text-indigo-600 hover:bg-slate-50">PDF</a>
+                                </div>
                             </td>
                         </tr>
                         <tr v-if="invoices.data.length === 0">
-                            <td class="px-5 py-8 text-center text-slate-500" colspan="7">Счета не найдены</td>
+                            <td class="px-5 py-8 text-center text-slate-500" colspan="8">Счета не найдены</td>
                         </tr>
                     </tbody>
                 </table>

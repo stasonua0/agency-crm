@@ -49,6 +49,7 @@ Route::middleware('auth')->group(function () {
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::post('invoices/{invoice}/email', [InvoiceController::class, 'sendEmail'])->name('invoices.email.store');
     Route::post('invoices/{invoice}/tochka', [InvoiceController::class, 'sendTochka'])->name('invoices.tochka.store');
     Route::get('acts', [ActController::class, 'index'])->name('acts.index');
     Route::post('acts', [ActController::class, 'store'])->name('acts.store');

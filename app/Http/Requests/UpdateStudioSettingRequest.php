@@ -21,6 +21,8 @@ class UpdateStudioSettingRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:255'],
             'vat_enabled' => ['boolean'],
+            'invoice_email_subject' => ['nullable', 'string', 'max:255'],
+            'invoice_email_body' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

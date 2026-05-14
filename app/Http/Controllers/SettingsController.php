@@ -24,6 +24,6 @@ class SettingsController extends Controller
             'vat_enabled' => $request->boolean('vat_enabled'),
         ]);
 
-        return redirect()->route('settings.index')->with('success', 'Реквизиты студии сохранены.');
+        return redirect()->route('settings.index')->with('success', 'Настройки сохранены.');
     }
 }
