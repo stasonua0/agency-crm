@@ -17,7 +17,7 @@ const navigation = [
     { label: 'Клиенты', routeName: 'clients.index', href: route('clients.index'), mark: 'КЛ' },
     { label: 'Проекты', routeName: 'projects.index', href: route('projects.index'), mark: 'ПР' },
     { label: 'Услуги', routeName: 'services.index', href: route('services.index'), mark: 'УС' },
-    { label: 'Регулярные операции', routeName: 'recurring.items.index', href: route('recurring.items.index'), mark: 'РО' },
+    { label: 'Регулярные операции', routeName: 'recurring-items.index', href: route('recurring-items.index'), mark: 'РО' },
     { label: 'Начисления', routeName: 'payment.occurrences.index', href: route('payment.occurrences.index'), mark: 'НЧ' },
     { label: 'Финансовые операции', routeName: 'financial.operations.index', href: route('financial.operations.index'), mark: 'ФО' },
     { label: 'Счета', routeName: 'invoices.index', href: route('invoices.index'), mark: 'СЧ' },
