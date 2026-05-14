@@ -5,6 +5,7 @@ use App\Http\Controllers\FinancialOperationController;
 use App\Http\Controllers\PayeeController;
 use App\Http\Controllers\PaymentOccurrenceController;
 use App\Http\Controllers\PayoutController;
+use App\Http\Controllers\PayrollPayoutController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RecurringItemController;
@@ -33,11 +34,11 @@ Route::middleware('auth')->group(function () {
     Route::get('payouts', [PayoutController::class, 'index'])->name('payouts.index');
     Route::post('payouts', [PayoutController::class, 'store'])->name('payouts.store');
     Route::patch('payouts/{payoutBatch}/mark-paid', [PayoutController::class, 'markPaid'])->name('payouts.mark-paid');
+    Route::resource('payroll', PayrollPayoutController::class)->parameters(['payroll' => 'payroll'])->except('show');
 
     $sections = [
         'invoices' => 'Счета',
         'acts' => 'Акты',
-        'payroll' => 'Зарплаты',
         'pf' => 'ПФ',
         'reports' => 'Отчёты',
         'settings' => 'Настройки',

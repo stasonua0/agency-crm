@@ -51,6 +51,11 @@ class Payee extends Model
         return $this->hasMany(PayoutBatch::class);
     }
 
+    public function payrollPayouts(): HasMany
+    {
+        return $this->hasMany(PayrollPayout::class, 'employee_id');
+    }
+
     public function archive(): void
     {
         $this->forceFill(['status' => self::STATUS_ARCHIVED])->save();
