@@ -108,6 +108,16 @@ class PaymentOccurrence extends Model
         return $this->hasOne(PfPayoutBatchItem::class);
     }
 
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class, 'occurrence_id');
+    }
+
+    public function act(): HasOne
+    {
+        return $this->hasOne(Act::class, 'occurrence_id');
+    }
+
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
         return $query->when($search, function (Builder $query, string $search) {

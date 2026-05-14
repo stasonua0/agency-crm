@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ActController;
 use App\Http\Controllers\FinancialOperationController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PayeeController;
 use App\Http\Controllers\PaymentOccurrenceController;
 use App\Http\Controllers\PayoutController;
@@ -11,6 +13,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RecurringItemController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -39,12 +42,15 @@ Route::middleware('auth')->group(function () {
     Route::get('pf', [PfController::class, 'index'])->name('pf.index');
     Route::post('pf', [PfController::class, 'store'])->name('pf.store');
     Route::patch('pf/{pfPayoutBatch}/mark-paid', [PfController::class, 'markPaid'])->name('pf.mark-paid');
+    Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+    Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::get('acts', [ActController::class, 'index'])->name('acts.index');
+    Route::post('acts', [ActController::class, 'store'])->name('acts.store');
 
     $sections = [
-        'invoices' => 'Счета',
-        'acts' => 'Акты',
         'reports' => 'Отчёты',
-        'settings' => 'Настройки',
         'audit-log' => 'Журнал аудита',
     ];
 
