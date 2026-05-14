@@ -127,6 +127,12 @@ const isActive = (routeName) => route().current(routeName);
             </header>
 
             <main class="px-4 py-6 sm:px-6 lg:px-8">
+                <div
+                    v-if="$page.props.flash?.success"
+                    class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800"
+                >
+                    {{ $page.props.flash.success }}
+                </div>
                 <slot />
             </main>
         </div>

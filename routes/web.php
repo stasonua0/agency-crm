@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -13,10 +16,11 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
+    Route::resource('clients', ClientController::class)->except('show');
+    Route::resource('services', ServiceController::class)->except('show');
+    Route::resource('projects', ProjectController::class)->except('show');
+
     $sections = [
-        'clients' => 'Клиенты',
-        'projects' => 'Проекты',
-        'services' => 'Услуги',
         'recurring-items' => 'Регулярные операции',
         'payment-occurrences' => 'Начисления',
         'financial-operations' => 'Финансовые операции',
