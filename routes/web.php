@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ActController;
+use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyLookupController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FinancialOperationController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PayeeController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\PfController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RecurringItemController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TochkaWebhookController;
@@ -23,9 +25,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
@@ -53,17 +53,11 @@ Route::middleware('auth')->group(function () {
     Route::post('invoices/{invoice}/tochka', [InvoiceController::class, 'sendTochka'])->name('invoices.tochka.store');
     Route::get('acts', [ActController::class, 'index'])->name('acts.index');
     Route::post('acts', [ActController::class, 'store'])->name('acts.store');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
 
-    $sections = [
-        'reports' => 'Отчёты',
-        'audit-log' => 'Журнал аудита',
-    ];
-
-    foreach ($sections as $slug => $title) {
-        Route::get("/{$slug}", fn () => Inertia::render('SectionPlaceholder', [
-            'title' => $title,
-        ]))->name(str_replace('-', '.', $slug).'.index');
-    }
+    Route::get('/audit-log', fn () => Inertia::render('SectionPlaceholder', [
+        'title' => 'Журнал аудита',
+    ]))->name('audit.log.index');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
