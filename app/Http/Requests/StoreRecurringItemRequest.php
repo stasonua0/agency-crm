@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Client;
+use App\Models\Payee;
 use App\Models\Project;
 use App\Models\RecurringItem;
 use App\Models\Service;
@@ -23,6 +24,7 @@ class StoreRecurringItemRequest extends FormRequest
             'start_date' => ['required', 'date'],
             'next_payment_date' => ['required', 'date'],
             'payment_method' => ['required', Rule::in(RecurringItem::PAYMENT_METHODS)],
+            'contractor_id' => ['nullable', Rule::exists(Payee::class, 'id')],
             'contractor_name' => ['nullable', 'string', 'max:255'],
             'contractor_amount' => ['nullable', 'required_with:contractor_name', 'numeric', 'min:0.01', 'max:9999999999.99'],
             'status' => ['required', Rule::in(RecurringItem::STATUSES)],
@@ -39,6 +41,22 @@ class StoreRecurringItemRequest extends FormRequest
                 if ($project && $project->client_id !== $this->integer('client_id')) {
                     $validator->errors()->add('project_id', 'Проект должен принадлежать выбранному клиенту.');
                 }
+            }
+
+            if ($this->filled('contractor_id')) {
+                $contractor = Payee::query()->find($this->integer('contractor_id'));
+
+                if ($contractor && $contractor->type !== Payee::TYPE_CONTRACTOR) {
+                    $validator->errors()->add('contractor_id', 'Выберите получателя с типом “Подрядчик”.');
+                }
+
+                if ($contractor && $contractor->status !== Payee::STATUS_ACTIVE) {
+                    $validator->errors()->add('contractor_id', 'Подрядчик должен быть активным.');
+                }
+            }
+
+            if ($this->filled('contractor_id') && ! $this->filled('contractor_amount')) {
+                $validator->errors()->add('contractor_amount', 'Укажите сумму подрядчику.');
             }
         });
     }

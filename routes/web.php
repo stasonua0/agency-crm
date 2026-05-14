@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\FinancialOperationController;
+use App\Http\Controllers\PayeeController;
 use App\Http\Controllers\PaymentOccurrenceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
@@ -22,6 +23,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
     Route::resource('services', ServiceController::class)->except('show');
     Route::resource('projects', ProjectController::class)->except('show');
+    Route::resource('payees', PayeeController::class)->except('show');
     Route::resource('recurring-items', RecurringItemController::class)->except('show');
     Route::get('payment-occurrences', [PaymentOccurrenceController::class, 'index'])->name('payment.occurrences.index');
     Route::patch('payment-occurrences/{paymentOccurrence}/mark-paid', [PaymentOccurrenceController::class, 'markPaid'])->name('payment.occurrences.mark-paid');
@@ -30,7 +32,6 @@ Route::middleware('auth')->group(function () {
     $sections = [
         'invoices' => 'Счета',
         'acts' => 'Акты',
-        'payees' => 'Получатели выплат',
         'payouts' => 'Выплаты',
         'payroll' => 'Зарплаты',
         'pf' => 'ПФ',

@@ -49,6 +49,7 @@ class RecurringItem extends Model
         'start_date',
         'next_payment_date',
         'payment_method',
+        'contractor_id',
         'contractor_name',
         'contractor_amount',
         'status',
@@ -80,6 +81,11 @@ class RecurringItem extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function contractor(): BelongsTo
+    {
+        return $this->belongsTo(Payee::class, 'contractor_id');
+    }
+
     public function occurrences(): HasMany
     {
         return $this->hasMany(PaymentOccurrence::class);
@@ -92,6 +98,7 @@ class RecurringItem extends Model
                 $query
                     ->where('comment', 'ilike', "%{$search}%")
                     ->orWhere('contractor_name', 'ilike', "%{$search}%")
+                    ->orWhereHas('contractor', fn (Builder $query) => $query->where('name', 'ilike', "%{$search}%"))
                     ->orWhereHas('client', fn (Builder $query) => $query->where('short_name', 'ilike', "%{$search}%"))
                     ->orWhereHas('project', fn (Builder $query) => $query->where('name', 'ilike', "%{$search}%"))
                     ->orWhereHas('service', fn (Builder $query) => $query->where('name', 'ilike', "%{$search}%"));

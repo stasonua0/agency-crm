@@ -8,6 +8,7 @@ const props = defineProps({
     clients: { type: Array, required: true },
     projects: { type: Array, required: true },
     services: { type: Array, required: true },
+    payees: { type: Array, required: true },
 });
 
 const form = useForm({
@@ -20,6 +21,7 @@ const form = useForm({
     start_date: props.item.start_date,
     next_payment_date: props.item.next_payment_date,
     payment_method: props.item.payment_method,
+    contractor_id: props.item.contractor_id ?? '',
     contractor_name: props.item.contractor_name ?? '',
     contractor_amount: props.item.contractor_amount ?? '',
     status: props.item.status,
@@ -39,7 +41,7 @@ const submit = () => form.put(route('recurring-items.update', props.item.id));
             </div>
         </template>
         <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <RecurringItemForm :form="form" :clients="clients" :projects="projects" :services="services" submit-label="Сохранить" @submit="submit" />
+            <RecurringItemForm :form="form" :clients="clients" :projects="projects" :services="services" :payees="payees" submit-label="Сохранить" @submit="submit" />
         </section>
     </AuthenticatedLayout>
 </template>

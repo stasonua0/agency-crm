@@ -7,6 +7,7 @@ defineProps({
     clients: { type: Array, required: true },
     projects: { type: Array, required: true },
     services: { type: Array, required: true },
+    payees: { type: Array, required: true },
 });
 
 const today = new Date().toISOString().slice(0, 10);
@@ -21,6 +22,7 @@ const form = useForm({
     start_date: today,
     next_payment_date: today,
     payment_method: 'bank_transfer',
+    contractor_id: '',
     contractor_name: '',
     contractor_amount: '',
     status: 'active',
@@ -40,7 +42,7 @@ const submit = () => form.post(route('recurring-items.store'));
             </div>
         </template>
         <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <RecurringItemForm :form="form" :clients="clients" :projects="projects" :services="services" submit-label="Создать" @submit="submit" />
+            <RecurringItemForm :form="form" :clients="clients" :projects="projects" :services="services" :payees="payees" submit-label="Создать" @submit="submit" />
         </section>
     </AuthenticatedLayout>
 </template>

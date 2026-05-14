@@ -85,7 +85,7 @@ const stopItem = (item) => {
                             <td class="px-5 py-4">{{ periodicityLabels[item.periodicity] }}</td>
                             <td class="px-5 py-4">{{ item.next_payment_date }}</td>
                             <td class="px-5 py-4">
-                                <div>{{ item.contractor_name || '—' }}</div>
+                                <div>{{ item.contractor?.name || item.contractor_name || '—' }}</div>
                                 <div class="text-slate-500">{{ item.contractor_amount ? `${money(item.contractor_amount)} ₽` : '' }}</div>
                             </td>
                             <td class="px-5 py-4">

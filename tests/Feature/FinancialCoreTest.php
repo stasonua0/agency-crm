@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Client;
 use App\Models\FinancialOperation;
+use App\Models\ContractorSettlement;
 use App\Models\PaymentOccurrence;
+use App\Models\Payee;
 use App\Models\Project;
 use App\Models\RecurringItem;
 use App\Models\Service;
@@ -120,6 +122,60 @@ class FinancialCoreTest extends TestCase
             'source' => FinancialOperation::SOURCE_OCCURRENCE,
             'source_occurrence_id' => $occurrence->id,
             'amount' => '100000.00',
+        ]);
+    }
+
+    public function test_mark_paid_creates_pending_contractor_settlement(): void
+    {
+        [$client, $project, $service] = $this->directoryFixture();
+        $payee = Payee::create([
+            'type' => Payee::TYPE_CONTRACTOR,
+            'name' => 'Иван Подрядчик',
+            'requisites' => 'Счёт 40702810000000000000',
+            'status' => Payee::STATUS_ACTIVE,
+        ]);
+
+        $item = RecurringItem::create([
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'amount' => 100000,
+            'periodicity' => RecurringItem::PERIOD_MONTHLY,
+            'start_date' => '2026-05-01',
+            'next_payment_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'contractor_id' => $payee->id,
+            'contractor_amount' => 25000,
+            'status' => RecurringItem::STATUS_ACTIVE,
+        ]);
+
+        $occurrence = PaymentOccurrence::create([
+            'recurring_item_id' => $item->id,
+            'client_id' => $client->id,
+            'project_id' => $project->id,
+            'service_id' => $service->id,
+            'amount_snapshot' => 100000,
+            'contractor_amount_snapshot' => 25000,
+            'contractor_name_snapshot' => $payee->name,
+            'period' => '2026-05',
+            'due_date' => '2026-05-01',
+            'payment_method' => RecurringItem::METHOD_CASH,
+            'operation_type' => RecurringItem::TYPE_INCOME,
+            'contractor_id_snapshot' => $payee->id,
+            'status' => PaymentOccurrence::STATUS_PLANNED,
+        ]);
+
+        $occurrence->markPaid('2026-05-10 12:00:00');
+        $occurrence->markPaid('2026-05-10 12:00:00');
+
+        $this->assertSame(1, ContractorSettlement::query()->count());
+        $this->assertDatabaseHas('contractor_settlements', [
+            'payment_occurrence_id' => $occurrence->id,
+            'payee_id' => $payee->id,
+            'payee_name_snapshot' => 'Иван Подрядчик',
+            'amount' => '25000.00',
+            'status' => ContractorSettlement::STATUS_PENDING,
         ]);
     }
 

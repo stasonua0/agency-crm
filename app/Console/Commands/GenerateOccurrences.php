@@ -55,10 +55,11 @@ class GenerateOccurrences extends Command
                                 'service_id' => $lockedItem->service_id,
                                 'amount_snapshot' => $lockedItem->amount,
                                 'contractor_amount_snapshot' => $lockedItem->contractor_amount,
-                                'contractor_name_snapshot' => $lockedItem->contractor_name,
+                                'contractor_name_snapshot' => $lockedItem->contractor?->name ?? $lockedItem->contractor_name,
                                 'due_date' => $dueDate->toDateString(),
                                 'payment_method' => $lockedItem->payment_method,
                                 'operation_type' => $lockedItem->operation_type,
+                                'contractor_id_snapshot' => $lockedItem->contractor_id,
                                 'status' => PaymentOccurrence::STATUS_PLANNED,
                             ]
                         );

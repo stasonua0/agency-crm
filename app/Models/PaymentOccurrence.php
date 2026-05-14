@@ -33,6 +33,7 @@ class PaymentOccurrence extends Model
         'due_date',
         'payment_method',
         'operation_type',
+        'contractor_id_snapshot',
         'status',
         'paid_at',
         'invoice_id',
@@ -68,9 +69,19 @@ class PaymentOccurrence extends Model
         return $this->belongsTo(Service::class);
     }
 
+    public function contractor(): BelongsTo
+    {
+        return $this->belongsTo(Payee::class, 'contractor_id_snapshot');
+    }
+
     public function financialOperation(): HasOne
     {
         return $this->hasOne(FinancialOperation::class, 'source_occurrence_id');
+    }
+
+    public function contractorSettlement(): HasOne
+    {
+        return $this->hasOne(ContractorSettlement::class);
     }
 
     public function scopeSearch(Builder $query, ?string $search): Builder
@@ -110,6 +121,25 @@ class PaymentOccurrence extends Model
                     'comment' => "Оплата начисления {$this->period}",
                 ]
             );
+
+            if ((float) $this->contractor_amount_snapshot > 0) {
+                $payee = $this->contractor_id_snapshot
+                    ? Payee::query()->find($this->contractor_id_snapshot)
+                    : null;
+
+                ContractorSettlement::firstOrCreate(
+                    [
+                        'payment_occurrence_id' => $this->id,
+                    ],
+                    [
+                        'payee_id' => $payee?->id,
+                        'payee_name_snapshot' => $payee?->name ?? $this->contractor_name_snapshot ?? 'Подрядчик',
+                        'payee_requisites_snapshot' => $payee?->requisites,
+                        'amount' => $this->contractor_amount_snapshot,
+                        'status' => ContractorSettlement::STATUS_PENDING,
+                    ]
+                );
+            }
         });
     }
 }

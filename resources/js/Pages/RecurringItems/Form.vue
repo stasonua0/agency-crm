@@ -12,6 +12,7 @@ const props = defineProps({
     clients: { type: Array, required: true },
     projects: { type: Array, required: true },
     services: { type: Array, required: true },
+    payees: { type: Array, required: true },
     submitLabel: { type: String, required: true },
 });
 
@@ -121,10 +122,21 @@ const statuses = [
 
         <div class="grid gap-5 lg:grid-cols-2">
             <div>
-                <InputLabel for="contractor_name" value="Подрядчик" />
-                <TextInput id="contractor_name" v-model="form.contractor_name" class="mt-1 block w-full" />
+                <InputLabel for="contractor_id" value="Подрядчик из справочника" />
+                <select id="contractor_id" v-model="form.contractor_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Не выбран</option>
+                    <option v-for="payee in payees" :key="payee.id" :value="payee.id">{{ payee.name }}</option>
+                </select>
+                <InputError class="mt-2" :message="form.errors.contractor_id" />
+            </div>
+            <div>
+                <InputLabel for="contractor_name" value="Подрядчик вручную" />
+                <TextInput id="contractor_name" v-model="form.contractor_name" class="mt-1 block w-full" placeholder="Если нет в справочнике" />
                 <InputError class="mt-2" :message="form.errors.contractor_name" />
             </div>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-2">
             <div>
                 <InputLabel for="contractor_amount" value="Сумма подрядчику" />
                 <TextInput id="contractor_amount" v-model="form.contractor_amount" type="number" min="0.01" step="0.01" class="mt-1 block w-full" />

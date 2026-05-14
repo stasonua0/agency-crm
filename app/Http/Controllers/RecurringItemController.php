@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRecurringItemRequest;
 use App\Http\Requests\UpdateRecurringItemRequest;
 use App\Models\Client;
+use App\Models\Payee;
 use App\Models\Project;
 use App\Models\RecurringItem;
 use App\Models\Service;
@@ -20,7 +21,7 @@ class RecurringItemController extends Controller
         $filters = $request->only(['search', 'status', 'operation_type', 'payment_method']);
 
         $items = RecurringItem::query()
-            ->with(['client:id,short_name,legal_name', 'project:id,name', 'service:id,name'])
+            ->with(['client:id,short_name,legal_name', 'project:id,name', 'service:id,name', 'contractor:id,name'])
             ->search($request->string('search')->toString())
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->when($request->filled('operation_type'), fn ($query) => $query->where('operation_type', $request->string('operation_type')))
@@ -84,6 +85,11 @@ class RecurringItemController extends Controller
                 ->where('status', Service::STATUS_ACTIVE)
                 ->orderBy('name')
                 ->get(['id', 'name', 'document_name']),
+            'payees' => Payee::query()
+                ->where('type', Payee::TYPE_CONTRACTOR)
+                ->where('status', Payee::STATUS_ACTIVE)
+                ->orderBy('name')
+                ->get(['id', 'name', 'requisites']),
         ];
     }
 }
