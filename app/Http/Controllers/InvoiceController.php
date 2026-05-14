@@ -6,8 +6,11 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Models\Invoice;
 use App\Models\PaymentOccurrence;
 use App\Models\RecurringItem;
+use App\Services\Tochka\TochkaClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,7 +21,7 @@ class InvoiceController extends Controller
         $filters = $request->only(['search', 'status']);
 
         $invoices = Invoice::query()
-            ->with(['client:id,short_name', 'occurrence.service:id,name'])
+            ->with(['client:id,short_name,invoice_email', 'occurrence.service:id,name'])
             ->search($request->string('search')->toString())
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))
             ->latest('invoice_date')
@@ -52,5 +55,52 @@ class InvoiceController extends Controller
         $occurrence->forceFill(['invoice_id' => $invoice->id])->save();
 
         return redirect()->route('invoices.index')->with('success', 'Счёт создан.');
+    }
+
+    public function sendTochka(Invoice $invoice, TochkaClient $tochka): RedirectResponse
+    {
+        if ($invoice->status === Invoice::STATUS_PAID || $invoice->status === Invoice::STATUS_CANCELLED) {
+            throw ValidationException::withMessages([
+                'invoice' => 'Оплаченный или отменённый счёт нельзя повторно отправить в Точку.',
+            ]);
+        }
+
+        if ($invoice->external_id) {
+            return back()->with('success', 'Счёт уже создан в Точке.');
+        }
+
+        DB::transaction(function () use ($invoice, $tochka) {
+            $invoice->loadMissing(['client', 'occurrence.service']);
+
+            $createResponse = $tochka->createInvoice($invoice);
+            $externalId = data_get($createResponse, 'data.external_id')
+                ?? data_get($createResponse, 'id');
+
+            if (! $externalId) {
+                throw ValidationException::withMessages([
+                    'invoice' => 'Точка не вернула external_id счёта.',
+                ]);
+            }
+
+            $fileResponse = $tochka->getInvoiceFile($externalId);
+            $emailResponse = $invoice->client?->invoice_email
+                ? $tochka->sendInvoiceEmail($externalId, $invoice->client->invoice_email)
+                : null;
+
+            $invoice->update([
+                'external_id' => $externalId,
+                'invoice_number' => data_get($createResponse, 'data.invoice_number', $invoice->invoice_number),
+                'invoice_url' => data_get($createResponse, 'data.invoice_url') ?? data_get($fileResponse, 'url'),
+                'invoice_pdf_path' => data_get($fileResponse, 'path'),
+                'status' => Invoice::STATUS_SENT,
+                'raw_response' => [
+                    'create' => $createResponse,
+                    'file' => $fileResponse,
+                    'email' => $emailResponse,
+                ],
+            ]);
+        });
+
+        return back()->with('success', 'Счёт создан в sandbox Точки.');
     }
 }

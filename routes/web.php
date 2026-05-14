@@ -14,6 +14,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\RecurringItemController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\TochkaWebhookController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::post('invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+    Route::post('invoices/{invoice}/tochka', [InvoiceController::class, 'sendTochka'])->name('invoices.tochka.store');
     Route::get('acts', [ActController::class, 'index'])->name('acts.index');
     Route::post('acts', [ActController::class, 'store'])->name('acts.store');
 
@@ -64,5 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+Route::post('/webhooks/tochka', TochkaWebhookController::class)->name('webhooks.tochka');
 
 require __DIR__.'/auth.php';

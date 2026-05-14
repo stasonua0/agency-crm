@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'tochka' => [
+        'sandbox' => env('TOCHKA_SANDBOX', true),
+        'base_url' => env('TOCHKA_BASE_URL', 'https://enter.tochka.com/sandbox'),
+        'token' => env('TOCHKA_TOKEN'),
+        'timeout' => env('TOCHKA_TIMEOUT', 15),
+    ],
+
 ];
